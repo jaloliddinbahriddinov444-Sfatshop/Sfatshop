@@ -235,6 +235,7 @@
     { id:9, name:"Poyabzal uchun yopishqoq 60ml", price:18000, category:"Uy", emoji:"👞", rating:4.3, reviews:54, desc:"Poyabzalni ta'mirlash uchun mustahkam yopishqoq.", inStock:true }
   ];
  
+  const BACKEND_URL = "http://localhost:8000"; // keyin Render manziliga ozgartiriladi
   let cart = {};
   let activeCategory = "Barchasi";
   let searchQuery = "";
@@ -487,8 +488,31 @@ ${note ? '📝 Izoh: ' + note : ''}
     showToast("✅ Mahsulot qo'shildi!");
   }
  
-  renderCategories();
-  renderProducts();
+  async function loadProducts() {
+    try {
+      const res = await fetch(BACKEND_URL + "/api/products");
+      const data = await res.json();
+      const list = data.products || [];
+      if (list.length) {
+        products = list.map(p => ({
+          id: p.mini_id,
+          name: p.name,
+          price: p.price,
+          category: p.category || "Boshqa",
+          img: p.image_url || null,
+          video: p.video_url || null,
+          inStock: (p.stock || 0) > 0,
+          emoji: "📦"
+        }));
+      }
+    } catch (e) {
+      console.log("Backend ulanmadi, demo mahsulotlar:", e.message);
+    }
+    renderCategories();
+    renderProducts();
+  }
+
+  loadProducts();
 </script>
 </body>
 </html>
