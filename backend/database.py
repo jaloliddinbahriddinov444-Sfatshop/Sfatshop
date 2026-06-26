@@ -58,6 +58,27 @@ def init_db():
             updated_at  TEXT    NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS users (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            login       TEXT    NOT NULL UNIQUE,
+            name        TEXT    NOT NULL,
+            phone       TEXT,
+            position    TEXT,
+            role        TEXT    NOT NULL DEFAULT 'ombor',
+            pass_hash   TEXT    NOT NULL,
+            pass_salt   TEXT    NOT NULL,
+            status      TEXT    NOT NULL DEFAULT 'active',
+            created_at  TEXT    NOT NULL,
+            updated_at  TEXT    NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+            token       TEXT    PRIMARY KEY,
+            user_id     INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            created_at  TEXT    NOT NULL,
+            expires_at  TEXT    NOT NULL
+        );
+
         CREATE INDEX IF NOT EXISTS idx_uzum_products_shop_id
             ON uzum_products(shop_id);
 
