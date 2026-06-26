@@ -309,11 +309,6 @@ tbody td { padding: 0.75rem 1rem; vertical-align: middle; }
 
 <!-- ===== LOGIN ===== -->
 <div id="login-screen">
-  <!-- Safari password manager trick: hidden dummy fields -->
-  <div style="display:none" aria-hidden="true">
-    <input type="text" name="fake_user" tabindex="-1">
-    <input type="password" name="fake_pass" tabindex="-1">
-  </div>
   <div class="login-box">
     <div class="login-logo">
       <div style="display:flex;justify-content:center;margin-bottom:10px">
@@ -343,15 +338,17 @@ tbody td { padding: 0.75rem 1rem; vertical-align: middle; }
       <p>Ombor boshqaruv tizimi</p>
     </div>
     <div class="login-err" id="login-err">Login yoki parol noto'g'ri!</div>
-    <div class="login-field">
-      <label>Login (telefon yoki username)</label>
-      <input type="text" id="l-user" placeholder="+998901234567" autocomplete="off">
-    </div>
-    <div class="login-field">
-      <label>Parol</label>
-      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doLogin()">
-    </div>
-    <button class="login-btn" onclick="doLogin()">Kirish →</button>
+    <form id="login-form" action="#" method="post" onsubmit="doLogin(event); return false;">
+      <div class="login-field">
+        <label for="l-user">Login (telefon yoki username)</label>
+        <input type="text" id="l-user" name="username" placeholder="+998901234567" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+      </div>
+      <div class="login-field">
+        <label for="l-pass">Parol</label>
+        <input type="password" id="l-pass" name="password" placeholder="••••••••" autocomplete="current-password">
+      </div>
+      <button type="submit" class="login-btn">Kirish →</button>
+    </form>
   </div>
 </div>
 
@@ -1056,7 +1053,8 @@ function enterApp(user) {
   });
 }
 
-async function doLogin() {
+async function doLogin(e) {
+  if (e && e.preventDefault) e.preventDefault();
   const u = document.getElementById('l-user').value.trim();
   const p = document.getElementById('l-pass').value;
   const err = document.getElementById('login-err');
@@ -1076,7 +1074,8 @@ async function doLogin() {
     }
     const j = await res.json();
     setSessToken(j.token);
-    document.getElementById('l-pass').value = '';
+    // parolni bu yerda tozalamaymiz - brauzer parolni saqlashni taklif qila olsin
+    // (login ekrani enterApp ichida yashiriladi; logout'da tozalanadi)
     enterApp(j.user);
   } catch(e) {
     err.textContent = 'Serverga ulanib bolmadi (internetni tekshiring).';
