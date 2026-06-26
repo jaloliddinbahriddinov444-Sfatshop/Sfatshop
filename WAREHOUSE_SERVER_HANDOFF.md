@@ -32,15 +32,24 @@ Sabab: panelning o'nlab funksiyasini qayta yozmaslik, xavfsiz va tez.
 ## Qoldi (keyingi ish)
 - [x] GitHub'ga push (2026-06-26): VPS 21e9faa origin'ga ketdi (cherry-pick -> 0488279),
       Mac+VPS+GitHub sinxron. Mac terminal ruxsati endi ishlaydi.
-- [~] FAZA D: haqiqiy backend login (sessiya) — BAJARILDI va jonli deploy qilindi (ee93420, 7c1c76d, 3c0c8cb).
+- [x] FAZA D: haqiqiy backend login (sessiya) — BAJARILDI, jonli deploy + brauzerда tasdiqlandi.
       Backend: users+sessions jadval, pbkdf2 hash, /api/login,/logout,/me, /api/admin/users (admin),
       middleware X-Admin-Token(xizmat) YOKI X-Session-Token(rol bilan). ADMIN_TOKEN xizmat tokeni bo'lib qoldi.
-      Panel (ombor.html, endi repo'da): login->/api/login, ombor sessiya tokeni bilan, Hodimlar->/api/admin/users.
-      Jonli smoke test: login 200 + wh-state GET 200 + blob JSON OK.
-      QOLDI (foydalanuvchi tasdiqlashi): (1) jonli admin seed (seed_admin.py, parol o'zi kiritadi);
-      (2) panelni brauzerда ochib login sinash (DOM brauzerда hali ishlamagan — Chrome kengaytma ulanmagan edi);
-      (3) hosting joyi tanlash. ESLATMA: jonli'da hozir 0 user — eski jasur/malika qayta yaratilishi shart.
-- [ ] FAZA E (kelajak): har hodimni jonli serverga ko'chirish / hosting.
+      Panel (ombor.html, repo'da): login->/api/login (haqiqiy <form>, autocomplete=username/current-password),
+      ombor sessiya tokeni bilan, Hodimlar->/api/admin/users (server). Brauzerда jonli login ISHLADI.
+      Admin seed qilindi (login: admin). Brend favicon qo'shildi.
+- [x] HOSTING: panel nginx orqali https://api.sfatshop.uz/panel da (location = /panel -> /opt/sfatshop/ombor.html).
+      nginx config: /etc/nginx/sites-available/sfatshop (zaxira: sfatshop.bak.20260626).
+      Panel yangilanishi: Mac'da tahrir -> commit/push -> VPS 'cd /opt/sfatshop && git pull' (statik, restart shart emas).
+- [ ] Ixtiyoriy: ombor.sfatshop.uz subdomen (DNS A: ombor->45.138.158.174 kerak, keyin certbot).
+- [ ] Eski jasur/malika va boshqa hodimlarni Hodimlar sahifasidan qayta yaratish (serverда faqat 1 admin).
+- [ ] FAZA E (kelajak): import/eksport, hisobotlar va h.k.
+
+## Deploy shpargalkasi (FAZA D dan keyin)
+- Backend o'zgarsa: Mac commit/push -> VPS `cd /opt/sfatshop && git pull && systemctl restart sfatshop.service`.
+- Panel (ombor.html) o'zgarsa: Mac commit/push -> VPS `git pull` (restart shart emas, nginx statik beradi).
+- Yangi admin/parol reset: VPS `cd /opt/sfatshop/backend && ADMIN_LOGIN=.. ./venv/bin/python seed_admin.py` (parol getpass).
+- SSH parolsiz (kalit bilan) ishlaydi: ssh root@45.138.158.174.
 
 ## Eslatma
 - VPS muddati: 25.07.2026 | Domen: 25.06.2027
