@@ -52,6 +52,12 @@ def init_db():
             created_at       TEXT    NOT NULL
         );
 
+        CREATE TABLE IF NOT EXISTS wh_state (
+            id          INTEGER PRIMARY KEY CHECK (id = 1),
+            data        TEXT    NOT NULL,
+            updated_at  TEXT    NOT NULL
+        );
+
         CREATE INDEX IF NOT EXISTS idx_uzum_products_shop_id
             ON uzum_products(shop_id);
 

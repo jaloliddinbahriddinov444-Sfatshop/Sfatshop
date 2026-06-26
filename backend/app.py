@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 from datetime import datetime, timezone
 
@@ -31,7 +32,7 @@ async def cors_mw(request, handler):
         except web.HTTPException as exc:
             resp = exc
     resp.headers["Access-Control-Allow-Origin"] = "*"
-    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PATCH, DELETE, OPTIONS"
+    resp.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, PATCH, DELETE, OPTIONS"
     resp.headers["Access-Control-Allow-Headers"] = "Content-Type, X-Admin-Token"
     return resp
 
@@ -189,13 +190,61 @@ async def admin_sync(request: web.Request) -> web.Response:
     return web.json_response({"results": results})
 
 
+async def admin_get_wh_state(request: web.Request) -> web.Response:
+    conn = database.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT data, updated_at FROM wh_state WHERE id = 1")
+    row = cur.fetchone()
+    conn.close()
+    if row is None:
+        return web.json_response({"data": None, "updated_at": None})
+    return web.json_response({"data": row["data"], "updated_at": row["updated_at"]})
+
+
+async def admin_put_wh_state(request: web.Request) -> web.Response:
+    try:
+        body = await request.json()
+    except Exception:
+        return web.json_response({"error": "invalid JSON"}, status=400)
+    data = body.get("data")
+    base = body.get("base")
+    if data is None:
+        return web.json_response({"error": "data majburiy"}, status=400)
+    if not isinstance(data, str):
+        data = json.dumps(data, ensure_ascii=False)
+    conn = database.get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT updated_at FROM wh_state WHERE id = 1")
+    row = cur.fetchone()
+    if row is not None and base != row["updated_at"]:
+        conn.close()
+        return web.json_response(
+            {"error": "conflict", "current_updated_at": row["updated_at"]},
+            status=409)
+    now = _now()
+    if row is None:
+        cur.execute(
+            "INSERT INTO wh_state (id, data, updated_at) VALUES (1, ?, ?)",
+            (data, now))
+    else:
+        cur.execute(
+            "UPDATE wh_state SET data = ?, updated_at = ? WHERE id = 1",
+            (data, now))
+    conn.commit()
+    conn.close()
+    return web.json_response({"status": "saved", "updated_at": now})
+
+
 async def health(request: web.Request) -> web.Response:
     return web.json_response({"status": "ok"})
 
 
 def create_app() -> web.Application:
     database.init_db()
-    app = web.Application(middlewares=[cors_mw, admin_auth_mw])
+    app = web.Application(
+        middlewares=[cors_mw, admin_auth_mw],
+        client_max_size=20 * 1024 * 1024,
+    )
     app.router.add_get("/", health)
     app.router.add_get("/api/products", get_products)
     app.router.add_get("/api/admin/uzum-products", admin_uzum_products)
@@ -204,6 +253,8 @@ def create_app() -> web.Application:
     app.router.add_patch("/api/admin/products/{id}", admin_update_product)
     app.router.add_delete("/api/admin/products/{id}", admin_delete_product)
     app.router.add_post("/api/admin/sync", admin_sync)
+    app.router.add_get("/api/admin/wh-state", admin_get_wh_state)
+    app.router.add_put("/api/admin/wh-state", admin_put_wh_state)
     return app
 
 
