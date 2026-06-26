@@ -1,0 +1,2572 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sfatshop Ombori</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --green-dark: #1a3a0f; --green-mid: #2d6a1f; --green-base: #3d8a2a;
+  --green-light: #5aad3f; --green-pale: #c8eab8; --green-faint: #f0f8eb;
+  --amber: #c47c0a; --amber-bg: #fef3dc;
+  --red: #b83232; --red-bg: #fde8e8;
+  --blue: #1a56a8; --blue-bg: #e8f0fb;
+  --surface: #fff; --surface-2: #f6f7f4; --surface-3: #eceee9;
+  --border: #d8dbd2; --text-1: #1a1e16; --text-2: #4a5040; --text-3: #7a8270;
+  --font-main: 'IBM Plex Sans', sans-serif; --font-mono: 'IBM Plex Mono', monospace;
+  --radius: 8px; --radius-lg: 12px; --shadow-md: 0 4px 16px rgba(0,0,0,0.12);
+}
+body { font-family: var(--font-main); background: var(--surface-2); color: var(--text-1); min-height: 100vh; }
+
+/* ===== LOGIN ===== */
+#login-screen {
+  min-height: 100vh; display: flex; align-items: center; justify-content: center;
+  background: linear-gradient(135deg, #1a3a0f 0%, #2d6a1f 100%);
+}
+.login-box {
+  background: var(--surface); border-radius: var(--radius-lg);
+  padding: 2.5rem; width: 100%; max-width: 380px; box-shadow: var(--shadow-md);
+}
+.login-logo { text-align: center; margin-bottom: 1.75rem; }
+.login-logo .icon { font-size: 40px; margin-bottom: 8px; }
+.login-logo h1 { font-size: 22px; font-weight: 600; color: var(--text-1); }
+.login-logo p { font-size: 12px; color: var(--text-3); margin-top: 4px; }
+.login-field { margin-bottom: 1rem; }
+.login-field label { display: block; font-size: 12px; font-weight: 500; color: var(--text-2); margin-bottom: 5px; }
+.login-field input {
+  width: 100%; padding: 10px 12px; border: 1px solid var(--border);
+  border-radius: var(--radius); font-size: 14px; font-family: var(--font-main);
+  color: var(--text-1); outline: none; transition: border-color 0.15s;
+}
+.login-field input:focus { border-color: var(--green-base); }
+.login-btn {
+  width: 100%; padding: 11px; background: var(--green-base); color: #fff;
+  border: none; border-radius: var(--radius); font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-top: 0.5rem; font-family: var(--font-main); transition: background 0.15s;
+}
+.login-btn:hover { background: var(--green-mid); }
+.login-err { background: var(--red-bg); color: var(--red); border-radius: var(--radius); padding: 8px 12px; font-size: 12.5px; margin-bottom: 1rem; display: none; }
+
+/* ===== APP ===== */
+#app { display: none; }
+.sidebar {
+  position: fixed; left: 0; top: 0; bottom: 0; width: 224px;
+  background: var(--green-dark); display: flex; flex-direction: column; z-index: 100;
+  transition: width 0.22s cubic-bezier(.4,0,.2,1);
+}
+.sidebar.collapsed { width: 56px; }
+.sidebar-logo {
+  padding: 1rem 1rem 0.85rem; border-bottom: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 10px; overflow: hidden;
+}
+.logo-svg-wrap {
+  width: 36px; height: 36px; flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+}
+.logo-text-wrap { flex: 1; min-width: 0; transition: opacity 0.18s, transform 0.18s; }
+.sidebar.collapsed .logo-text-wrap { opacity: 0; pointer-events: none; transform: translateX(-8px); }
+.logo-name { font-size: 14px; font-weight: 600; color: #fff; white-space: nowrap; }
+.logo-sub { font-size: 10px; color: rgba(255,255,255,0.4); margin-top: 1px; white-space: nowrap; }
+
+/* collapse toggle btn inside topbar */
+.toggle-sidebar-btn {
+  background: none; border: none; cursor: pointer; color: var(--text-3);
+  padding: 6px; border-radius: var(--radius); display: flex; align-items: center;
+  transition: background 0.15s, color 0.15s;
+}
+.toggle-sidebar-btn:hover { background: var(--surface-2); color: var(--text-1); }
+.toggle-sidebar-btn svg { width: 18px; height: 18px; display: block; transition: transform 0.22s; }
+.sidebar.collapsed ~ .main .toggle-sidebar-btn svg { transform: scaleX(-1); }
+
+.nav-section {
+  padding: 1rem 0.75rem 0.4rem; font-size: 10px; font-weight: 600;
+  color: rgba(255,255,255,0.3); letter-spacing: 0.08em; text-transform: uppercase;
+  white-space: nowrap; overflow: hidden; transition: opacity 0.18s;
+}
+.sidebar.collapsed .nav-section { opacity: 0; padding: 0.4rem 0; }
+.nav-item {
+  display: flex; align-items: center; gap: 10px; padding: 0.6rem 1rem;
+  margin: 1px 0.5rem; border-radius: var(--radius); cursor: pointer;
+  color: rgba(255,255,255,0.6); font-size: 13px; transition: all 0.15s;
+  border: none; background: none; width: calc(100% - 1rem); text-align: left;
+  overflow: hidden; white-space: nowrap;
+}
+.sidebar.collapsed .nav-item { justify-content: center; padding: 0.65rem; }
+.sidebar.collapsed .nav-item span { display: none; }
+.nav-item:hover { background: rgba(255,255,255,0.08); color: #fff; }
+.nav-item.active { background: var(--green-base); color: #fff; }
+.nav-item svg { width: 16px; height: 16px; flex-shrink: 0; }
+.nav-badge { margin-left: auto; background: var(--red); color: #fff; font-size: 10px; padding: 1px 6px; border-radius: 20px; }
+.sidebar-user {
+  margin-top: auto; padding: 1rem; border-top: 1px solid rgba(255,255,255,0.1);
+  display: flex; align-items: center; gap: 10px; overflow: hidden;
+}
+.sidebar.collapsed .sidebar-user { justify-content: center; padding: 0.75rem 0; }
+.user-avatar { width: 32px; height: 32px; background: var(--green-base); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: #fff; flex-shrink: 0; }
+.user-info { flex: 1; min-width: 0; transition: opacity 0.18s; }
+.sidebar.collapsed .user-info { display: none; }
+.user-name { font-size: 12px; font-weight: 500; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.user-role { font-size: 10px; color: rgba(255,255,255,0.4); }
+.logout-btn { background: none; border: none; cursor: pointer; color: rgba(255,255,255,0.4); padding: 4px; border-radius: 4px; transition: color 0.15s; flex-shrink: 0; }
+.sidebar.collapsed .logout-btn { display: none; }
+.logout-btn:hover { color: #fff; }
+.logout-btn svg { width: 14px; height: 14px; display: block; }
+
+.main { margin-left: 224px; min-height: 100vh; transition: margin-left 0.22s cubic-bezier(.4,0,.2,1); }
+.sidebar.collapsed ~ .main { margin-left: 56px; }
+.topbar {
+  background: var(--surface); border-bottom: 1px solid var(--border);
+  padding: 0 1.5rem; height: 56px; display: flex; align-items: center;
+  justify-content: space-between; position: sticky; top: 0; z-index: 50;
+}
+.topbar-title { font-size: 16px; font-weight: 600; }
+.topbar-date { font-size: 12px; color: var(--text-3); font-family: var(--font-mono); }
+.content { padding: 1.5rem; }
+
+.page { display: none; }
+.page.active { display: block; }
+
+/* ===== COMPONENTS ===== */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(155px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.1rem; }
+.stat-icon { font-size: 22px; margin-bottom: 8px; }
+.stat-label { font-size: 11.5px; color: var(--text-3); margin-bottom: 4px; }
+.stat-value { font-size: 24px; font-weight: 600; font-family: var(--font-mono); }
+.stat-unit { font-size: 12px; font-weight: 400; color: var(--text-3); }
+.stat-badge { margin-top: 6px; display: inline-flex; align-items: center; font-size: 11px; padding: 2px 8px; border-radius: 20px; }
+.badge-green { background: var(--green-faint); color: var(--green-mid); }
+.badge-amber { background: var(--amber-bg); color: var(--amber); }
+.badge-red { background: var(--red-bg); color: var(--red); }
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+.alert { display: flex; align-items: flex-start; gap: 10px; padding: 0.75rem 1rem; border-radius: var(--radius); font-size: 13px; margin-bottom: 1.25rem; }
+.alert svg { width: 16px; height: 16px; flex-shrink: 0; margin-top: 1px; }
+.alert-amber { background: var(--amber-bg); color: var(--amber); border: 1px solid #f5d78a; }
+.alert-green { background: var(--green-faint); color: var(--green-mid); border: 1px solid var(--green-pale); }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 1.5rem; }
+.card-header { padding: 0.9rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.card-title { font-size: 14px; font-weight: 600; }
+.toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.search-wrap { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; background: var(--surface-2); }
+.search-wrap svg { width: 14px; height: 14px; color: var(--text-3); flex-shrink: 0; }
+.search-wrap input { border: none; background: transparent; font-size: 13px; color: var(--text-1); outline: none; width: 150px; font-family: var(--font-main); }
+.search-wrap input::placeholder { color: var(--text-3); }
+select.filter-select { border: 1px solid var(--border); border-radius: var(--radius); padding: 6px 10px; font-size: 12.5px; color: var(--text-2); background: var(--surface-2); outline: none; cursor: pointer; font-family: var(--font-main); }
+.btn { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: var(--radius); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: var(--font-main); }
+.btn-primary { background: var(--green-base); color: #fff; }
+.btn-primary:hover { background: var(--green-mid); }
+.btn-outline { background: transparent; color: var(--text-2); border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--surface-2); }
+.btn-blue { background: var(--blue-bg); color: var(--blue); border: 1px solid #b5cef5; }
+.btn-blue:hover { background: #d0e3fa; }
+.btn-sm { padding: 5px 10px; font-size: 12px; }
+.btn-icon { padding: 5px 7px; background: transparent; border: 1px solid var(--border); border-radius: var(--radius); cursor: pointer; color: var(--text-3); transition: all 0.15s; }
+.btn-icon:hover { background: var(--surface-2); color: var(--text-1); }
+.btn-icon svg { width: 14px; height: 14px; display: block; }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th { text-align: left; padding: 0.6rem 1rem; font-size: 11px; font-weight: 600; color: var(--text-3); letter-spacing: 0.05em; text-transform: uppercase; background: var(--surface-2); border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.1s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: var(--surface-2); }
+tbody td { padding: 0.75rem 1rem; vertical-align: middle; }
+.td-name { font-weight: 500; }
+.td-sku { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+.qty-row { display: flex; align-items: center; gap: 8px; }
+.qty-bar-bg { flex: 1; height: 4px; background: var(--surface-3); border-radius: 4px; min-width: 50px; overflow: hidden; }
+.qty-bar { height: 100%; border-radius: 4px; }
+.qty-text { font-family: var(--font-mono); font-size: 12px; color: var(--text-2); white-space: nowrap; min-width: 70px; text-align: right; }
+.action-row { display: flex; gap: 4px; }
+.cat-pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; background: var(--surface-3); color: var(--text-2); }
+.loc-pill { display: inline-block; font-family: var(--font-mono); font-size: 12px; font-weight: 600; color: var(--text-1); background: var(--surface-2); border: 1px solid var(--border); border-radius: 5px; padding: 1px 7px; letter-spacing: 0.03em; }
+.loc-pill.empty { color: var(--text-3); font-weight: 400; font-family: var(--font-main); background: transparent; border-color: transparent; }
+.history-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; }
+.history-kirim { background: var(--green-faint); color: var(--green-mid); }
+.history-chiqim { background: var(--red-bg); color: var(--red); }
+.empty-state { padding: 3rem; text-align: center; color: var(--text-3); font-size: 13px; }
+.empty-state .icon { font-size: 32px; margin-bottom: 8px; }
+.report-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
+.report-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.1rem; }
+.report-num { font-size: 26px; font-weight: 600; font-family: var(--font-mono); margin: 6px 0; }
+.report-num.green { color: var(--green-mid); }
+.report-num.red { color: var(--red); }
+.report-num.amber { color: var(--amber); }
+
+/* HARAKAT GRID */
+.harakat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+.harakat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1.25rem; }
+.harakat-title { font-size: 13px; font-weight: 600; margin-bottom: 1rem; display: flex; align-items: center; gap: 8px; }
+.dot-green { width: 8px; height: 8px; border-radius: 50%; background: var(--green-base); }
+.dot-red { width: 8px; height: 8px; border-radius: 50%; background: var(--red); }
+.field { margin-bottom: 0.85rem; }
+.field label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 4px; font-weight: 500; }
+.field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13.5px; background: var(--surface); color: var(--text-1); outline: none; font-family: var(--font-main); transition: border-color 0.15s; }
+.field input:focus, .field select:focus { border-color: var(--green-base); }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* MODAL */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 200; align-items: center; justify-content: center; padding: 1rem; }
+.modal-overlay.open { display: flex; }
+.modal-box { background: var(--surface); border-radius: var(--radius-lg); border: 1px solid var(--border); width: 100%; max-width: 420px; box-shadow: var(--shadow-md); animation: slideUp 0.2s ease; max-height: 90vh; overflow-y: auto; }
+@keyframes slideUp { from { transform: translateY(12px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+.modal-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; background: var(--surface); z-index: 1; }
+.modal-title { font-size: 15px; font-weight: 600; }
+.modal-body { padding: 1.25rem; }
+.modal-footer { padding: 1rem 1.25rem; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+
+/* HODIMLAR */
+.emp-role-admin { background: #fef0fb; color: #8b2fa8; }
+.emp-role-ombor { background: var(--green-faint); color: var(--green-mid); }
+.emp-role-hisobot { background: var(--blue-bg); color: var(--blue); }
+.emp-status-active { background: var(--green-faint); color: var(--green-mid); }
+.emp-status-blocked { background: var(--red-bg); color: var(--red); }
+
+/* JOYLASHUV */
+.loc-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; }
+
+/* IMPORT */
+.import-zone { border: 2px dashed var(--border); border-radius: var(--radius-lg); padding: 2rem; text-align: center; color: var(--text-3); cursor: pointer; transition: border-color 0.15s; margin-bottom: 1rem; }
+.import-zone:hover { border-color: var(--green-base); color: var(--green-mid); }
+.import-zone .icon { font-size: 32px; margin-bottom: 8px; }
+
+/* TOAST */
+#mahsulot-table thead th { position: sticky; top: 0; z-index: 2; }
+#mahsulot-table { font-size: 12.5px; }
+
+/* Dimension panel */
+.dim-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 3px 10px; border-radius: 20px; border: 1.5px solid var(--border);
+  background: var(--surface-2); color: var(--text-3); font-size: 11px; cursor: pointer;
+  font-family: var(--font-main); transition: all 0.15s; white-space: nowrap; font-weight: 500;
+}
+.dim-btn:hover { opacity: 0.85; }
+.dim-btn.measured {
+  background: #eafbf0; border-color: #7dd4a0; color: #1a7a42;
+}
+.dim-btn.unmeasured {
+  background: var(--red-bg); border-color: #f5c0c0; color: var(--red);
+}
+.dim-btn.partial {
+  background: var(--red-bg); border-color: #f5c0c0; color: var(--red);
+}
+
+/* Per-variant dimension status badge */
+.var-dim-status {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500;
+  cursor: pointer; border: 1.5px solid; transition: opacity 0.15s; white-space: nowrap;
+}
+.var-dim-status:hover { opacity: 0.8; }
+.var-dim-measured { background: #eafbf0; border-color: #7dd4a0; color: #1a7a42; }
+.var-dim-unmeasured { background: var(--red-bg); border-color: #f5c0c0; color: var(--red); }
+
+/* Dimension slide-down panel inside table */
+.dim-panel-row { display: none; }
+.dim-panel-row.visible { display: table-row; }
+.dim-panel-row td { background: #f0f5ff; border-bottom: 2px solid #c5d8f8; padding: 0.75rem 1rem 0.75rem 3rem; }
+.dim-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; max-width: 640px; }
+.dim-cell { display: flex; flex-direction: column; gap: 3px; }
+.dim-label { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+.dim-input { padding: 5px 8px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font-mono); background: var(--surface); color: var(--text-1); outline: none; width: 100%; transition: border-color 0.15s; }
+.dim-input:focus { border-color: var(--blue); }
+.dim-save-btn { margin-top: 8px; padding: 5px 14px; background: var(--blue); color: #fff; border: none; border-radius: var(--radius); font-size: 12px; cursor: pointer; font-family: var(--font-main); }
+.dim-save-btn:hover { background: #1a4e9c; }
+.dim-val { font-family: var(--font-mono); font-size: 12px; color: var(--text-1); font-weight: 500; }
+.dim-val.empty { color: var(--text-3); font-style: italic; }
+.expand-btn {
+  width: 28px; height: 28px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface-2);
+  cursor: pointer; display: flex; align-items: center; justify-content: center;
+  color: var(--text-3); transition: all 0.15s; flex-shrink: 0;
+}
+.expand-btn:hover { background: var(--surface-3); color: var(--text-1); }
+.expand-btn svg { width: 14px; height: 14px; transition: transform 0.2s; }
+.expand-btn.open svg { transform: rotate(180deg); }
+.variant-row { display: none; }
+.variant-row.visible { display: table-row; }
+.variant-row td { background: var(--surface-2); padding: 0.5rem 0.75rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+.variant-row:last-of-type td { }
+.variant-info { display: flex; align-items: center; gap: 10px; }
+.variant-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-3); flex-shrink: 0; margin-top: 4px; }
+.variant-dot.measured { background: #1a7a42; }
+.variant-sku { font-family: var(--font-mono); font-size: 12px; color: var(--text-1); font-weight: 500; }
+.variant-barcode { font-family: var(--font-mono); font-size: 11px; color: var(--text-3); }
+#toast { position: fixed; bottom: 24px; right: 24px; z-index: 999; display: none; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 500; box-shadow: 0 4px 16px rgba(0,0,0,0.15); }
+
+@media (max-width: 720px) {
+  .sidebar { width: 56px !important; }
+  .logo-text-wrap, .nav-section, .nav-item span, .user-info, .sidebar-user .logout-btn { display: none !important; }
+  .nav-item { justify-content: center; padding: 0.65rem; }
+  .main { margin-left: 56px !important; }
+  .harakat-grid { grid-template-columns: 1fr; }
+  .field-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== LOGIN ===== -->
+<div id="login-screen">
+  <!-- Safari password manager trick: hidden dummy fields -->
+  <div style="display:none" aria-hidden="true">
+    <input type="text" name="fake_user" tabindex="-1">
+    <input type="password" name="fake_pass" tabindex="-1">
+  </div>
+  <div class="login-box">
+    <div class="login-logo">
+      <div style="display:flex;justify-content:center;margin-bottom:10px">
+        <svg width="72" height="56" viewBox="0 0 200 155" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Cart body orange -->
+          <path d="M40 20 L55 20 L80 95 L155 95 L175 40 L65 40" stroke="#E87722" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Cart basket grid lines -->
+          <line x1="90" y1="40" x2="100" y2="90" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <line x1="115" y1="40" x2="120" y2="90" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <line x1="140" y1="40" x2="142" y2="82" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <line x1="70" y1="58" x2="168" y2="58" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <line x1="75" y1="75" x2="162" y2="75" stroke="#E87722" stroke-width="5" stroke-linecap="round"/>
+          <!-- Speed lines -->
+          <path d="M30 55 L10 55" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <path d="M35 70 L8 70" stroke="#E87722" stroke-width="5" stroke-linecap="round"/>
+          <path d="M38 85 L18 85" stroke="#E87722" stroke-width="4" stroke-linecap="round"/>
+          <!-- Blue swoosh under cart -->
+          <path d="M55 105 Q115 125 180 100" stroke="#1A56A8" stroke-width="9" stroke-linecap="round" fill="none"/>
+          <!-- Wheels blue -->
+          <circle cx="95" cy="115" r="13" fill="#1A56A8"/>
+          <circle cx="95" cy="115" r="6" fill="white"/>
+          <circle cx="155" cy="112" r="13" fill="#1A56A8"/>
+          <circle cx="155" cy="112" r="6" fill="white"/>
+        </svg>
+      </div>
+      <h1 style="font-size:20px"><span style="color:#1A56A8">SFAT</span><span style="color:#E87722">SHOP</span> <span style="color:#4a5040;font-weight:400">Ombori</span></h1>
+      <p>Ombor boshqaruv tizimi</p>
+    </div>
+    <div class="login-err" id="login-err">Login yoki parol noto'g'ri!</div>
+    <div class="login-field">
+      <label>Login (telefon yoki username)</label>
+      <input type="text" id="l-user" placeholder="+998901234567" autocomplete="off">
+    </div>
+    <div class="login-field">
+      <label>Parol</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="new-password" onkeydown="if(event.key==='Enter')doLogin()">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Kirish →</button>
+  </div>
+</div>
+
+<!-- ===== APP ===== -->
+<div id="app">
+  <aside class="sidebar" id="main-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-svg-wrap">
+        <svg width="36" height="36" viewBox="0 0 200 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M40 22 L55 22 L80 100 L155 100 L175 44 L65 44" stroke="#E87722" stroke-width="12" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <line x1="90" y1="44" x2="100" y2="96" stroke="#E87722" stroke-width="8" stroke-linecap="round"/>
+          <line x1="115" y1="44" x2="120" y2="96" stroke="#E87722" stroke-width="8" stroke-linecap="round"/>
+          <line x1="140" y1="44" x2="142" y2="88" stroke="#E87722" stroke-width="7" stroke-linecap="round"/>
+          <line x1="70" y1="62" x2="168" y2="62" stroke="#E87722" stroke-width="7" stroke-linecap="round"/>
+          <line x1="75" y1="80" x2="162" y2="80" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <path d="M30 58 L12 58" stroke="#E87722" stroke-width="7" stroke-linecap="round"/>
+          <path d="M35 73 L9 73" stroke="#E87722" stroke-width="6" stroke-linecap="round"/>
+          <path d="M55 112 Q115 135 180 108" stroke="#1A56A8" stroke-width="10" stroke-linecap="round" fill="none"/>
+          <circle cx="95" cy="125" r="15" fill="#1A56A8"/>
+          <circle cx="95" cy="125" r="7" fill="white"/>
+          <circle cx="155" cy="120" r="15" fill="#1A56A8"/>
+          <circle cx="155" cy="120" r="7" fill="white"/>
+        </svg>
+      </div>
+      <div class="logo-text-wrap">
+        <div class="logo-name"><span style="color:#60aaff">SFAT</span><span style="color:#E87722">SHOP</span></div>
+        <div class="logo-sub" id="cur-location-label">Asosiy ombor</div>
+      </div>
+    </div>
+    <div class="nav-section">Asosiy</div>
+    <button class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      <span>Bosh sahifa</span>
+    </button>
+    <button class="nav-item" onclick="showPage('mahsulotlar',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      <span>Mahsulotlar</span>
+    </button>
+    <button class="nav-item" onclick="showPage('harakat',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+      <span>Kirim / Chiqim</span>
+    </button>
+    <button class="nav-item" onclick="showPage('hisobot',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      <span>Hisobot</span>
+    </button>
+    <div class="nav-section" id="admin-nav-section">Boshqaruv</div>
+    <button class="nav-item" id="nav-hodimlar" onclick="showPage('hodimlar',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Hodimlar</span>
+    </button>
+    <button class="nav-item" id="nav-joylashuv" onclick="showPage('joylashuv',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      <span>Ombor joylari</span>
+    </button>
+    <button class="nav-item" id="nav-import" onclick="showPage('import',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      <span>Import (CSV)</span>
+    </button>
+    <button class="nav-item" id="nav-miniapp" onclick="showPage('miniapp',this)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="0.5"/></svg>
+      <span>Mini App</span>
+    </button>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="user-avatar">A</div>
+      <div class="user-info">
+        <div class="user-name" id="user-display-name">Admin</div>
+        <div class="user-role" id="user-display-role">Administrator</div>
+      </div>
+      <button class="logout-btn" onclick="doLogout()" title="Chiqish">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <div class="main" id="main-content">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;gap:12px">
+        <button class="toggle-sidebar-btn" onclick="toggleSidebar()" title="Kengaytir / Yig'">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
+          </svg>
+        </button>
+        <div class="topbar-title" id="page-title">Bosh sahifa</div>
+      </div>
+      <div class="topbar-date" id="cur-date"></div>
+    </div>
+    <div class="content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid" id="stats-grid"></div>
+        <div id="low-alert"></div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Oxirgi harakatlar</span>
+            <button class="btn btn-outline btn-sm" onclick="showPage('harakat',document.querySelectorAll('.nav-item')[2])">Barchasini ko'rish</button>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Sana</th><th>Hodim</th><th>Mahsulot</th><th>Tur</th><th>Miqdor</th><th>Ombor joyi</th></tr></thead>
+            <tbody id="recent-history"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAHSULOTLAR -->
+      <div class="page" id="page-mahsulotlar">
+        <div class="card">
+          <div class="card-header" style="flex-direction:column;align-items:stretch;gap:8px">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+              <span class="card-title">Barcha mahsulotlar</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <button class="btn btn-primary" id="btn-add-prod" onclick="openProdModal('add')">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Qo'shish
+                </button>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div class="search-wrap" style="flex:1;min-width:200px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                <input type="text" id="search-input" placeholder="Mahsulot nomi, SKU, shtrixkod bo'yicha qidirish..." oninput="renderMahsulotlar()" style="width:100%">
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap">
+              <div class="search-wrap" style="flex:1;min-width:160px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <input type="text" id="loc-search-input" placeholder="Ombor o'rni bo'yicha qidirish (A3-3/2)..." oninput="renderMahsulotlar()" style="width:100%">
+              </div>
+              <select class="filter-select" id="cat-filter" onchange="renderMahsulotlar()">
+                <option value="">Barcha kategoriya</option>
+                <option>Yangi uzum</option><option>Quritilgan uzum</option>
+                <option>Mahsulotlar</option><option>Boshqa</option>
+              </select>
+              <select class="filter-select" id="loc-filter" onchange="renderMahsulotlar()">
+                <option value="">Barcha ombor joyi</option>
+              </select>
+            </div>
+          </div>
+          <div class="table-wrap">
+            <table id="mahsulot-table">
+              <thead>
+                <tr>
+                  <th style="min-width:40px;width:40px"></th>
+                  <th style="min-width:220px">Mahsulot / SKU / ID</th>
+                  <th style="min-width:110px">Tan narxi</th>
+                  <th style="min-width:140px">Izoh</th>
+                  <th style="min-width:110px">Ombor o'rni</th>
+                  <th style="min-width:80px">Kirim</th>
+                  <th style="min-width:80px">Chiqim</th>
+                  <th style="min-width:80px">Sotuv</th>
+                  <th style="min-width:80px">Qoldiq</th>
+                  <th style="min-width:70px">Holat</th>
+                  <th style="min-width:110px">Mahsulot o'lchami</th>
+                  <th style="min-width:80px">Amallar</th>
+                </tr>
+              </thead>
+              <tbody id="mahsulot-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HARAKAT -->
+      <div class="page" id="page-harakat">
+        <div class="harakat-grid">
+          <div class="harakat-card">
+            <div class="harakat-title"><span class="dot-green"></span>Kirim (tovar keldi)</div>
+            <div class="field"><label>Mahsulot</label><select id="kirim-prod" class="filter-select" style="width:100%"></select></div>
+            <div class="field"><label>Miqdor (kg)</label><input type="number" id="kirim-qty" placeholder="0" min="0"></div>
+            <div class="field"><label>Izoh</label><input type="text" id="kirim-note" placeholder="Masalan: Samarqanddan keldi"></div>
+            <button class="btn btn-primary" style="width:100%" onclick="doKirim()">✓ Kirimni qo'shish</button>
+          </div>
+          <div class="harakat-card">
+            <div class="harakat-title"><span class="dot-red"></span>Chiqim (tovar ketdi)</div>
+            <div class="field"><label>Mahsulot</label><select id="chiqim-prod" class="filter-select" style="width:100%"></select></div>
+            <div class="field"><label>Miqdor (kg)</label><input type="number" id="chiqim-qty" placeholder="0" min="0"></div>
+            <div class="field"><label>Izoh</label><input type="text" id="chiqim-note" placeholder="Masalan: Do'kon №3 ga sotildi"></div>
+            <button class="btn" style="width:100%;background:var(--red-bg);color:var(--red);border:1px solid #f5c0c0" onclick="doChiqim()">↑ Chiqimni qo'shish</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Harakat tarixi</span>
+            <select class="filter-select" id="history-filter" onchange="renderHistory()">
+              <option value="">Barcha</option><option value="kirim">Faqat kirim</option><option value="chiqim">Faqat chiqim</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table><thead><tr><th>Sana/Vaqt</th><th>Hodim</th><th>Mahsulot</th><th>Tur</th><th>Miqdor</th><th>Izoh</th></tr></thead>
+            <tbody id="history-tbody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- HISOBOT -->
+      <div class="page" id="page-hisobot">
+        <div id="hisobot-content"></div>
+      </div>
+
+      <!-- HODIMLAR -->
+      <div class="page" id="page-hodimlar">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Hodimlar ro'yxati</span>
+            <button class="btn btn-primary" onclick="openEmpModal('add')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Hodim qo'shish
+            </button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Ism</th><th>Login</th><th>Lavozim</th><th>Ruxsat</th><th>Holat</th><th>Amallar</th></tr></thead>
+              <tbody id="emp-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- JOYLASHUV -->
+      <div class="page" id="page-joylashuv">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem">
+          <div style="font-size:14px;font-weight:600">Ombor joylari</div>
+          <button class="btn btn-primary" onclick="openLocModal()">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Joy qo'shish
+          </button>
+        </div>
+        <div id="loc-list"></div>
+      </div>
+
+      <!-- IMPORT -->
+      <div class="page" id="page-import">
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-header"><span class="card-title">Uzum Market CSV import</span></div>
+          <div style="padding:1.25rem 1.5rem">
+            <div class="alert alert-green" style="margin-bottom:1.25rem">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+              <span>Bu import <b>aynan sizning CSV faylingiz formatini</b> qabul qiladi: ko'p qatorli mahsulotlar, bo'sh ustunlar, birlashtirilgan nomlar — hammasi to'g'ri o'qiladi.</span>
+            </div>
+            <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:0.85rem 1rem;margin-bottom:1.25rem;font-size:12px;color:var(--text-2)">
+              <div style="font-weight:600;margin-bottom:6px;color:var(--text-1)">Qabul qilinadigan ustunlar:</div>
+              <div style="display:flex;flex-wrap:wrap;gap:6px">
+                <span class="cat-pill">Mahsulot nomi</span><span class="cat-pill">asosiy sku</span><span class="cat-pill">Tavar ID</span><span class="cat-pill">sku</span><span class="cat-pill">shtrixkod</span><span class="cat-pill">Tan narxi (sum)</span><span class="cat-pill">Izoh</span><span class="cat-pill">ombor o'rni</span><span class="cat-pill">kirim</span><span class="cat-pill">chiqim</span><span class="cat-pill">sotuv</span><span class="cat-pill">qoldiq</span>
+              </div>
+            </div>
+            <label class="import-zone" for="csv-file-input">
+              <div class="icon">📂</div>
+              <div style="font-size:14px;font-weight:500;margin-bottom:4px">CSV faylni bu yerga tashlang</div>
+              <div style="font-size:12px">yoki bosing va tanlang (.csv)</div>
+              <input type="file" id="csv-file-input" accept=".csv,.txt" style="display:none" onchange="handleCSV(this)">
+            </label>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:1rem;font-size:12px;color:var(--text-2)">
+              <span>Encoding:</span>
+              <select id="csv-encoding" class="filter-select" style="font-size:12px">
+                <option value="auto">Avtomatik (tavsiya)</option>
+                <option value="UTF-8">UTF-8</option>
+                <option value="windows-1251">Windows-1251 (Kirill)</option>
+                <option value="iso-8859-5">ISO-8859-5</option>
+              </select>
+              <span style="color:var(--text-3)">— agar harflar noto'g'ri chiqsa, Windows-1251 tanlang</span>
+            </div>
+            <div id="import-preview" style="display:none">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+                <div style="font-size:13px;font-weight:600" id="import-summary"></div>
+                <div style="display:flex;gap:8px">
+                  <button class="btn btn-primary" onclick="confirmImport()">✓ Importni tasdiqlash</button>
+                  <button class="btn btn-outline" onclick="cancelImport()">Bekor qilish</button>
+                </div>
+              </div>
+              <div class="table-wrap" style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;max-height:420px;overflow-y:auto">
+                <table>
+                  <thead><tr><th style="width:40px"></th><th>Mahsulot / Asosiy SKU / ID</th><th>Tan narxi</th><th>Izoh</th><th>Ombor o'rni</th><th>Qoldiq</th></tr></thead>
+                  <tbody id="import-tbody"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Eksport (CSV yuklash)</span></div>
+          <div style="padding:1.25rem">
+            <p style="font-size:13px;color:var(--text-2);margin-bottom:1rem">Hozirgi ombor ma'lumotlarini Uzum Market formatida CSV sifatida yuklab oling.</p>
+            <button class="btn btn-outline" onclick="exportCSV()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              CSV yuklash
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="page" id="page-miniapp">
+
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-header"><span class="card-title">Ulanish sozlamalari</span></div>
+          <div style="padding:1.25rem 1.5rem">
+            <div style="display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end">
+              <div style="flex:1;min-width:200px">
+                <label style="display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px">
+                  Backend manzili
+                  <span id="ma-env-badge" style="margin-left:8px;padding:2px 9px;border-radius:10px;font-size:10.5px;font-weight:600;display:inline-block"></span>
+                </label>
+                <div style="display:flex;gap:6px;align-items:center">
+                  <input type="text" id="ma-backend" class="filter-select" style="flex:1" placeholder="https://api.sfatshop.uz" oninput="maBadgeUpdate()">
+                  <button type="button" onclick="maSetBackend('https://api.sfatshop.uz')" style="padding:6px 10px;background:var(--green-base);color:#fff;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">VPS</button>
+                  <button type="button" onclick="maSetBackend('http://localhost:8000')" style="padding:6px 10px;background:var(--red);color:#fff;border:none;border-radius:var(--radius);font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Lokal</button>
+                </div>
+              </div>
+              <div style="flex:1;min-width:200px">
+                <label style="display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px">Admin token</label>
+                <input type="password" id="ma-token" class="filter-select" style="width:100%" placeholder="parol">
+              </div>
+              <button class="btn btn-primary" onclick="maSaveSettings()">Saqlash</button>
+              <button class="btn btn-outline" onclick="maSync()">Uzumdan yangilash</button>
+            </div>
+            <div id="ma-status" style="margin-top:12px;font-size:12.5px"></div>
+          </div>
+        </div>
+
+        <div class="card" style="margin-bottom:1.5rem">
+          <div class="card-header"><span class="card-title">Uzum mahsulotlari</span></div>
+          <div style="padding:1.25rem 1.5rem">
+            <div style="display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:1rem">
+              <select id="ma-shop" class="filter-select" style="font-size:13px">
+                <option value="">Barcha dokonlar</option>
+                <option value="17042">Dokon 17042</option>
+                <option value="111637">Dokon 111637</option>
+              </select>
+              <input type="text" id="ma-search" class="filter-select" style="flex:1;min-width:160px" placeholder="Nomi boyicha qidirish...">
+              <button class="btn btn-primary" onclick="maLoadUzum()">Yuklash</button>
+            </div>
+            <div id="ma-bulk-bar" style="display:none;background:var(--blue-bg);border:1px solid var(--blue);border-radius:var(--radius);padding:10px 14px;margin-bottom:10px;align-items:center;flex-wrap:wrap;gap:10px">
+              <span id="ma-bulk-count" style="font-size:13px;font-weight:600;color:var(--blue)">0 ta tanlangan</span>
+              <input type="number" id="ma-bulk-price" placeholder="Narx (sum)" min="0" style="width:130px;padding:6px 8px;border:1px solid var(--border);border-radius:6px;font-size:13px">
+              <label style="font-size:12px;display:flex;align-items:center;gap:5px;cursor:pointer">
+                <input type="checkbox" id="ma-bulk-pct"> +% ustama (Uzum narxidan)
+              </label>
+              <button class="btn btn-primary btn-sm" onclick="maBulkAdd()">Tanlanganlarni chiqarish</button>
+            </div>
+            <div class="table-wrap" style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;max-height:480px;overflow-y:auto">
+              <table>
+                <thead><tr><th style="width:36px"><input type="checkbox" id="ma-check-all" title="Barchasini tanlash" onchange="maCheckAll(this.checked)"></th><th style="width:48px"></th><th>Nomi</th><th>Kategoriya</th><th>Qoldiq</th><th>Uzum narxi</th><th style="width:130px">Holat</th></tr></thead>
+                <tbody id="ma-uzum-tbody"><tr><td colspan="7"><div class="empty-state"><div class="icon">box</div>Yuklash tugmasini bosing</div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header"><span class="card-title">Mini App dagi mahsulotlar</span></div>
+          <div style="padding:1.25rem 1.5rem">
+            <div class="table-wrap" style="border:1px solid var(--border);border-radius:var(--radius);overflow:hidden">
+              <table>
+                <thead><tr><th>Nomi</th><th style="width:140px">Narx (sum)</th><th style="width:220px">Video havola</th><th style="width:90px">Aktiv</th><th style="width:60px"></th></tr></thead>
+                <tbody id="ma-mini-tbody"><tr><td colspan="5"><div class="empty-state"><div class="icon">bag</div>Hali mahsulot qoshilmagan</div></td></tr></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- MAHSULOT MODAL -->
+<div class="modal-overlay" id="prod-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="prod-modal-title">Yangi mahsulot</span>
+      <button class="btn-icon" onclick="closeProdModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="edit-id">
+      <div class="field"><label>Mahsulot nomi *</label><input type="text" id="f-name" placeholder="Masalan: Qora uzum"></div>
+      <div class="field-row">
+        <div class="field"><label>Asosiy SKU</label><input type="text" id="f-mainsku" placeholder="QU"></div>
+        <div class="field"><label>Tavar ID</label><input type="text" id="f-tavarid" placeholder="ID 639438"></div>
+      </div>
+      <div class="field">
+        <label>Uzum Seller havolasi (link)</label>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input type="url" id="f-url" placeholder="https://seller.uzum.uz/products/..." style="flex:1">
+          <button type="button" onclick="window.open(document.getElementById('f-url').value,'_blank')" style="padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface-2);cursor:pointer;color:var(--text-2);font-size:12px;white-space:nowrap" title="Linkni ochish">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="display:block"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>SKU kodi</label><input type="text" id="f-sku" placeholder="QU-001"></div>
+        <div class="field"><label>Shtrixkod</label><input type="text" id="f-barcode" placeholder="1000013425813"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Kategoriya *</label><select id="f-cat"><option>Yangi uzum</option><option>Quritilgan uzum</option><option>Mahsulotlar</option><option>Boshqa</option></select></div>
+        <div class="field"><label>Ombor joyi</label><select id="f-loc"></select></div>
+      </div>
+      <div style="background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:0.75rem 0.85rem;margin-bottom:0.85rem">
+        <div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Stelaj manzili</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-bottom:6px">
+          <div class="field" style="margin:0">
+            <label style="font-size:11px">Bo'lim</label>
+            <input type="text" id="f-shelf-bolim" placeholder="A" maxlength="3" style="text-transform:uppercase;font-family:var(--font-mono);font-weight:600;text-align:center">
+          </div>
+          <div class="field" style="margin:0">
+            <label style="font-size:11px">Stelaj №</label>
+            <input type="number" id="f-shelf-stelaj" placeholder="3" min="1" max="99" style="font-family:var(--font-mono);text-align:center">
+          </div>
+          <div class="field" style="margin:0">
+            <label style="font-size:11px">Qavat</label>
+            <input type="number" id="f-shelf-qavat" placeholder="2" min="1" max="20" style="font-family:var(--font-mono);text-align:center">
+          </div>
+          <div class="field" style="margin:0">
+            <label style="font-size:11px">Quti №</label>
+            <input type="number" id="f-shelf-quti" placeholder="1" min="1" max="99" style="font-family:var(--font-mono);text-align:center">
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-3)">
+          Kod: <span id="shelf-preview" style="font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--text-1);background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:1px 8px">—</span>
+        </div>
+      </div>
+      <div class="field"><label>Izoh</label><input type="text" id="f-izoh" placeholder="Masalan: 2 ta dan sotiladi"></div>
+      <div class="field-row">
+        <div class="field"><label>Tan narxi (so'm)</label><input type="number" id="f-price" placeholder="0" min="0"></div>
+        <div class="field"><label>Sotuv soni</label><input type="number" id="f-sotuv" placeholder="0" min="0"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Qoldiq (kg)</label><input type="number" id="f-qty" placeholder="0" min="0"></div>
+        <div class="field"><label>Maksimal sig'im (kg)</label><input type="number" id="f-max" placeholder="1000" min="1"></div>
+      </div>
+      <div class="field"><label>Minimal daraja (kg)</label><input type="number" id="f-min" placeholder="100" min="0"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeProdModal()">Bekor</button>
+      <button class="btn btn-primary" onclick="saveProduct()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- HODIM MODAL -->
+<div class="modal-overlay" id="emp-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="emp-modal-title">Yangi hodim</span>
+      <button class="btn-icon" onclick="closeEmpModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="emp-edit-id">
+      <div class="field-row">
+        <div class="field"><label>Ism *</label><input type="text" id="e-name" placeholder="Jasur Toshmatov"></div>
+        <div class="field"><label>Telefon</label><input type="text" id="e-phone" placeholder="+998 90 123 45 67"></div>
+      </div>
+      <div class="field"><label>Login (username) *</label><input type="text" id="e-login" placeholder="jasur01"></div>
+      <div class="field"><label>Parol *</label><input type="text" id="e-pass" placeholder="Kamida 6 belgi" autocomplete="off" style="-webkit-text-security:disc"></div>
+      <div class="field"><label>Lavozim</label><input type="text" id="e-position" placeholder="Ombor xodimi"></div>
+      <div class="field">
+        <label>Ruxsat darajasi *</label>
+        <select id="e-role">
+          <option value="admin">Administrator (hamma narsaga kirish)</option>
+          <option value="ombor">Ombor xodimi (kirim/chiqim, mahsulotlar)</option>
+          <option value="hisobot">Hisobotchi (faqat ko'rish)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Holat</label>
+        <select id="e-status"><option value="active">Faol</option><option value="blocked">Bloklangan</option></select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeEmpModal()">Bekor</button>
+      <button class="btn btn-primary" onclick="saveEmployee()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<!-- JOY MODAL -->
+<div class="modal-overlay" id="loc-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title">Ombor joyi qo'shish</span>
+      <button class="btn-icon" onclick="closeLocModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="loc-edit-id">
+      <div class="field"><label>Joy nomi *</label><input type="text" id="loc-name" placeholder="Masalan: Asosiy ombor, Toshkent"></div>
+      <div class="field"><label>Manzil</label><input type="text" id="loc-address" placeholder="Toshkent, Yunusobod tumani"></div>
+      <div class="field"><label>Mas'ul hodim</label><select id="loc-manager"></select></div>
+      <div class="field"><label>Izoh</label><input type="text" id="loc-note" placeholder="Ixtiyoriy"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeLocModal()">Bekor</button>
+      <button class="btn btn-primary" onclick="saveLocation()">Saqlash</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+const SK = 'sfatshop_v2';
+let currentUser = null;
+let importData = [];
+
+function defaultState() {
+  return {
+    // Faqat dastlabki ko'rsatish uchun (server users yuklanmaguncha). Login serverda.
+    employees: [
+      { id:1, name:'Admin', login:'admin', phone:'', position:'Direktor', role:'admin', status:'active' },
+    ],
+    locations: [
+      { id:1, name:'Asosiy ombor', address:'Toshkent, Yunusobod', manager:1, note:'Bosh ombor' },
+      { id:2, name:'Samarqand filiali', address:'Samarqand sh.', manager:2, note:'' },
+    ],
+    products: [
+      { id:1, name:'Qora uzum', mainSku:'QU', tavarId:'ID 100001', sku:'QU-001', barcode:'1000013425813', cat:'Yangi uzum', locId:1, shelfCode:'A1-2/1', izoh:'', price:8500, sotuv:120, qty:850, max:1200, minQty:150, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+      { id:2, name:'Yashil uzum', mainSku:'YU', tavarId:'ID 100002', sku:'YU-002', barcode:'1000013425820', cat:'Yangi uzum', locId:1, shelfCode:'A1-2/2', izoh:'', price:7200, sotuv:80, qty:420, max:800, minQty:100, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+      { id:3, name:'Katta dona uzum', mainSku:'KD', tavarId:'ID 100003', sku:'KD-003', barcode:'1000100182636', cat:'Yangi uzum', locId:2, shelfCode:'B2-1/3', izoh:'', price:12000, sotuv:55, qty:95, max:500, minQty:100, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+      { id:4, name:'Qishmish', mainSku:'QS', tavarId:'ID 100004', sku:'QS-004', barcode:'1000040008034', cat:'Quritilgan uzum', locId:1, shelfCode:'A3-3/2', izoh:'', price:35000, sotuv:200, qty:680, max:700, minQty:80, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+      { id:5, name:'Mayiz', mainSku:'MY', tavarId:'ID 100005', sku:'MY-005', barcode:'1000088507735', cat:'Quritilgan uzum', locId:2, shelfCode:'B3-2/1', izoh:'', price:28000, sotuv:45, qty:75, max:600, minQty:100, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+      { id:6, name:'Uzum sharbati', mainSku:'US', tavarId:'ID 100006', sku:'US-006', barcode:'1000095857151', cat:'Mahsulotlar', locId:1, shelfCode:'C1-1/4', izoh:'', price:15000, sotuv:180, qty:320, max:1000, minQty:50, uzunlik:'', kenglik:'', balandlik:'', ogirlik:'', logistika:'' },
+    ],
+    history: [
+      { id:1, date:'2025-05-10 09:15', prodId:1, empId:1, type:'kirim', qty:200, note:'Yangi partiya' },
+      { id:2, date:'2025-05-10 11:30', prodId:2, empId:2, type:'chiqim', qty:80, note:'Bozorga sotildi' },
+      { id:3, date:'2025-05-09 14:00', prodId:4, empId:2, type:'kirim', qty:150, note:'Yangi mahsulot' },
+      { id:4, date:'2025-05-08 10:00', prodId:6, empId:1, type:'kirim', qty:100, note:'Zavod' },
+    ],
+    nextId:7, nextHId:5, nextEId:4, nextLId:3,
+  };
+}
+
+// ===== SERVER-BACKED STATE (blob-sync) =====
+let state = defaultState();   // serverdan yuklanmaguncha vaqtincha
+let whBase = null;            // server versiyasi (concurrency guard)
+let whLoaded = false;
+let whConflict = false;
+let whSaveTimer = null;
+
+function whBackendUrl() { try { return (localStorage.getItem('sfatshop_ma_backend') || 'https://api.sfatshop.uz').replace(/\/+$/,''); } catch(e){ return 'https://api.sfatshop.uz'; } }
+// Sessiya tokeni (login orqali olinadi) — master token o'rniga ombor shu bilan ishlaydi
+function sessTokenVal() { try { return localStorage.getItem('sfatshop_sess') || ''; } catch(e){ return ''; } }
+function setSessToken(t) { try { if (t) localStorage.setItem('sfatshop_sess', t); else localStorage.removeItem('sfatshop_sess'); } catch(e){} }
+function whTokenVal() { return sessTokenVal(); }
+
+function whMergeDefaults(parsed) {
+  const def = defaultState();
+  ['employees','locations','products','history'].forEach(k => { if (!Array.isArray(parsed[k])) parsed[k] = def[k]; });
+  ['nextId','nextHId','nextEId','nextLId'].forEach(k => { if (typeof parsed[k] !== 'number') parsed[k] = def[k]; });
+  return parsed;
+}
+
+async function whLoad() {
+  const token = sessTokenVal();
+  if (!token) { whShowLoadError('Sessiya topilmadi. Qaytadan kiring.'); return false; }
+  try {
+    const res = await fetch(whBackendUrl() + '/api/admin/wh-state', { headers: { 'X-Session-Token': token } });
+    if (res.status === 401) { sessionExpired(); return false; }
+    if (!res.ok) { whShowLoadError('Server xato: ' + res.status); return false; }
+    const j = await res.json();
+    whBase = j.updated_at;
+    if (j.data) {
+      state = whMergeDefaults(JSON.parse(j.data));
+    } else {
+      state = defaultState();
+      await whSavePush();
+    }
+    whLoaded = true; whConflict = false;
+    try { localStorage.removeItem(SK); } catch(e) {}  // eski bloated nusxani tozalash
+    return true;
+  } catch(e) {
+    whShowLoadError('Serverga ulanib bolmadi (internetni tekshiring).');
+    return false;
+  }
+}
+
+function whShowLoadError(msg) {
+  const grid = document.getElementById('stats-grid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;background:var(--red-bg);color:var(--red);padding:1rem;border-radius:8px;font-size:14px">⚠️ Ombor serverdan yuklanmadi: ' + msg + ' <button onclick="whReload()" style="margin-left:10px;padding:5px 12px;border:none;background:var(--red);color:#fff;border-radius:6px;cursor:pointer">Qayta urinish</button></div>';
+}
+
+async function whReload() {
+  const ok = await whLoad();
+  if (ok) { updateDate(); renderDashboard(); renderMahsulotlar(); updateLocFilter(); if (typeof populateSelects==='function') populateSelects(); }
+}
+
+function saveState() {
+  if (whConflict) { whShowConflictBanner(); return; }
+  if (whSaveTimer) clearTimeout(whSaveTimer);
+  whSaveTimer = setTimeout(whSavePush, 700);
+}
+
+async function whSavePush() {
+  whSaveTimer = null;
+  if (whConflict) return;
+  const token = sessTokenVal();
+  if (!token) return;
+  try {
+    const res = await fetch(whBackendUrl() + '/api/admin/wh-state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'X-Session-Token': token },
+      body: JSON.stringify({ data: JSON.stringify(state), base: whBase })
+    });
+    if (res.status === 401) { sessionExpired(); return; }
+    if (res.status === 403) { toast('Bu amal uchun ruxsatingiz yoq','red'); return; }
+    if (res.status === 409) { whConflict = true; whShowConflictBanner(); return; }
+    if (res.ok) { const j = await res.json(); whBase = j.updated_at; }
+  } catch(e) { /* tarmoq xatosi - keyingi saqlashda qayta urinadi */ }
+}
+
+function whShowConflictBanner() {
+  let b = document.getElementById('wh-conflict-banner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'wh-conflict-banner';
+    b.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:99999;background:#b83232;color:#fff;padding:12px 16px;font-size:14px;text-align:center';
+    b.innerHTML = 'Boshqa birov ombrni ozgartirdi. Sizning saqlashingiz toxtatildi. <button onclick="location.reload()" style="margin-left:10px;padding:6px 14px;border:none;background:#fff;color:#b83232;border-radius:6px;font-weight:600;cursor:pointer">Sahifani yangilash</button>';
+    document.body.appendChild(b);
+  }
+}
+
+// ============================================================
+// UTILS
+// ============================================================
+function getProduct(id) { return state.products.find(p => p.id === id); }
+function getEmployee(id) { return state.employees.find(e => e.id === id); }
+function getLocation(id) { return state.locations.find(l => l.id === id); }
+function fmtNum(n) { return Number(n||0).toLocaleString('uz-UZ'); }
+function nowStr() {
+  const n = new Date();
+  return `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}-${String(n.getDate()).padStart(2,'0')} ${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`;
+}
+function getStatus(p) {
+  if (p.qty <= 0) return { label:"Bo'sh", cls:"badge-red" };
+  if (p.qty < p.minQty) return { label:"Kam", cls:"badge-red" };
+  if (p.qty < p.minQty * 2) return { label:"O'rtacha", cls:"badge-amber" };
+  return { label:"Yetarli", cls:"badge-green" };
+}
+function barColor(p) {
+  if (p.qty < p.minQty) return "#b83232";
+  if (p.qty < p.minQty * 2) return "#c47c0a";
+  return "#3d8a2a";
+}
+function toast(msg, type='green') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = type==='green' ? '#2d6a1f' : type==='red' ? '#b83232' : '#c47c0a';
+  t.style.color = '#fff'; t.style.display = 'block';
+  setTimeout(()=>{ t.style.display='none'; }, 3000);
+}
+function canEdit() { return currentUser && (currentUser.role === 'admin' || currentUser.role === 'ombor'); }
+function isAdmin() { return currentUser && currentUser.role === 'admin'; }
+
+// ============================================================
+// LOGIN / LOGOUT  (server sessiya: /api/login)
+// ============================================================
+// Ombor admin API (sessiya tokeni bilan). 401 -> sessiya tugagan.
+async function adminApi(path, options) {
+  const token = sessTokenVal();
+  const headers = Object.assign({ 'Content-Type': 'application/json' }, (options && options.headers) || {});
+  if (token) headers['X-Session-Token'] = token;
+  const res = await fetch(whBackendUrl() + path, Object.assign({}, options || {}, { headers }));
+  if (res.status === 401) { sessionExpired(); throw new Error('session_expired'); }
+  return res;
+}
+
+function sessionExpired() {
+  setSessToken(null);
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  const ls = document.getElementById('login-screen');
+  ls.style.display = 'flex';
+  const err = document.getElementById('login-err');
+  err.textContent = 'Sessiya tugadi. Qaytadan kiring.';
+  err.style.display = 'block';
+}
+
+// Login muvaffaqiyatidan keyin ilovaga kirish (UI sozlash). user = serverdan kelgan obyekt.
+function enterApp(user) {
+  currentUser = user;
+  document.getElementById('login-err').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('user-display-name').textContent = user.name;
+  const roles = { admin:'Administrator', ombor:'Ombor xodimi', hisobot:'Hisobotchi' };
+  document.getElementById('user-display-role').textContent = roles[user.role] || user.role;
+  document.getElementById('user-avatar').textContent = (user.name||'?')[0].toUpperCase();
+  const adminOnly = ['nav-hodimlar','nav-joylashuv','admin-nav-section','nav-miniapp'];
+  adminOnly.forEach(id => { const el=document.getElementById(id); if(el) el.style.display = isAdmin() ? '' : 'none'; });
+  document.getElementById('nav-import').style.display = isAdmin() || user.role==='ombor' ? '' : 'none';
+  if (!canEdit()) { const b=document.getElementById('btn-add-prod'); if(b) b.style.display='none'; }
+  updateDate();
+  const grid = document.getElementById('stats-grid');
+  if (grid) grid.innerHTML = '<div style="grid-column:1/-1;padding:1rem;color:var(--text-3);font-size:14px">Ombor serverdan yuklanmoqda...</div>';
+  whLoad().then(ok => {
+    if (ok) {
+      if (isAdmin()) { refreshEmployeesMirror(); }
+      renderDashboard(); renderMahsulotlar(); updateLocFilter();
+    }
+  });
+}
+
+async function doLogin() {
+  const u = document.getElementById('l-user').value.trim();
+  const p = document.getElementById('l-pass').value;
+  const err = document.getElementById('login-err');
+  if (!u || !p) { err.textContent='Login va parol kiriting'; err.style.display='block'; return; }
+  const btn = document.querySelector('.login-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Kirilmoqda...'; }
+  try {
+    const res = await fetch(whBackendUrl() + '/api/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: u, password: p })
+    });
+    if (!res.ok) {
+      err.textContent = res.status===401 ? "Login yoki parol noto'g'ri!" : ('Server xato: '+res.status);
+      err.style.display = 'block';
+      return;
+    }
+    const j = await res.json();
+    setSessToken(j.token);
+    document.getElementById('l-pass').value = '';
+    enterApp(j.user);
+  } catch(e) {
+    err.textContent = 'Serverga ulanib bolmadi (internetni tekshiring).';
+    err.style.display = 'block';
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = 'Kirish →'; }
+  }
+}
+
+async function doLogout() {
+  const token = sessTokenVal();
+  if (token) { try { await fetch(whBackendUrl()+'/api/logout', { method:'POST', headers:{ 'X-Session-Token': token } }); } catch(e){} }
+  setSessToken(null);
+  currentUser = null;
+  document.getElementById('app').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('l-user').value = '';
+  document.getElementById('l-pass').value = '';
+  showPage('dashboard', document.querySelector('.nav-item'));
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  const titles = { dashboard:'Bosh sahifa', mahsulotlar:'Mahsulotlar', harakat:'Kirim / Chiqim', hisobot:'Hisobot', hodimlar:'Hodimlar', joylashuv:'Ombor joylari', import:'Import / Eksport', miniapp:'Mini App' };
+  document.getElementById('page-title').textContent = titles[name] || name;
+  if (name==='harakat') populateSelects();
+  if (name==='hisobot') renderHisobot();
+  if (name==='dashboard') renderDashboard();
+  if (name==='hodimlar') renderHodimlar();
+  if (name==='joylashuv') renderLocations();
+  if (name==='mahsulotlar') renderMahsulotlar();
+  if (name==='miniapp') renderMiniApp();
+}
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDashboard() {
+  const prods = state.products;
+  const totalQty = prods.reduce((s,p)=>s+p.qty,0);
+  const totalVal = prods.reduce((s,p)=>s+p.qty*p.price,0);
+  const low = prods.filter(p=>p.qty < p.minQty);
+  document.getElementById('stats-grid').innerHTML = `
+    <div class="stat-card"><div class="stat-icon">📦</div><div class="stat-label">Mahsulot turi</div><div class="stat-value">${prods.length}<span class="stat-unit"> tur</span></div></div>
+    <div class="stat-card"><div class="stat-icon">⚖️</div><div class="stat-label">Jami miqdor</div><div class="stat-value">${fmtNum(totalQty)}<span class="stat-unit"> kg</span></div></div>
+    <div class="stat-card"><div class="stat-icon">💰</div><div class="stat-label">Jami qiymat</div><div class="stat-value" style="font-size:18px">${fmtNum(totalVal)}<span class="stat-unit"> so'm</span></div></div>
+    <div class="stat-card"><div class="stat-icon">🏪</div><div class="stat-label">Ombor joylari</div><div class="stat-value">${state.locations.length}<span class="stat-unit"> ta</span></div></div>
+    <div class="stat-card"><div class="stat-icon">👥</div><div class="stat-label">Faol hodimlar</div><div class="stat-value">${state.employees.filter(e=>e.status==='active').length}<span class="stat-unit"> ta</span></div></div>
+    <div class="stat-card"><div class="stat-icon">⚠️</div><div class="stat-label">Kam qolgan</div><div class="stat-value" style="color:${low.length>0?'var(--red)':'var(--green-mid)'}">${low.length}<span class="stat-unit"> tur</span></div></div>
+  `;
+  const alertEl = document.getElementById('low-alert');
+  const lowNames = low.slice(0,10).map(p=>`<b>${maEsc(p.name)}</b> (${fmtNum(p.qty)} kg)`).join(', ');
+  const lowMore = low.length > 10 ? ` va yana ${low.length-10} ta` : '';
+  alertEl.innerHTML = low.length > 0
+    ? `<div class="alert alert-amber"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg><span><b>Diqqat!</b> ${low.length} tur minimal darajadan past: ${lowNames}${lowMore}.</span></div>`
+    : `<div class="alert alert-green"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Barcha mahsulotlar yetarli miqdorda.</div>`;
+  const recent = [...state.history].reverse().slice(0,8);
+  document.getElementById('recent-history').innerHTML = recent.length === 0
+    ? '<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div>Hali harakat yo\'q</div></td></tr>'
+    : recent.map(h=>{
+        const p=getProduct(h.prodId); const emp=getEmployee(h.empId); const loc=p?getLocation(p.locId):null;
+        return `<tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${h.date}</td><td style="font-size:12px;color:var(--text-2)">${emp?emp.name:'—'}</td><td class="td-name">${p?p.name:'—'}</td><td><span class="history-badge history-${h.type}">${h.type==='kirim'?'↓ Kirim':'↑ Chiqim'}</span></td><td style="font-family:var(--font-mono)">${fmtNum(h.qty)} kg</td><td><span class="loc-pill">${loc?loc.name:'—'}</span></td></tr>`;
+      }).join('');
+}
+
+// ============================================================
+// MAHSULOTLAR
+// ============================================================
+function updateLocFilter() {
+  const sel = document.getElementById('loc-filter');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">Barcha joy</option>' + state.locations.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+  sel.value = cur;
+  // product modal loc
+  const fl = document.getElementById('f-loc');
+  if (fl) fl.innerHTML = state.locations.map(l=>`<option value="${l.id}">${l.name}</option>`).join('');
+}
+
+function renderMahsulotlar() {
+  const q = (document.getElementById('search-input')?.value||'').toLowerCase();
+  const locSearchQ = (document.getElementById('loc-search-input')?.value||'').toLowerCase();
+  const cat = document.getElementById('cat-filter')?.value||'';
+  const locId = document.getElementById('loc-filter')?.value||'';
+  let prods = state.products.filter(p=>
+    (p.name.toLowerCase().includes(q)||(p.sku||'').toLowerCase().includes(q)||(p.barcode||'').includes(q)||(p.mainSku||'').toLowerCase().includes(q)||(p.tavarId||'').toLowerCase().includes(q))&&
+    (locSearchQ==='' || (p.shelfCode||'').toLowerCase().includes(locSearchQ))&&
+    (cat===''||p.cat===cat)&&
+    (locId===''||p.locId==locId)
+  );
+  const tbody = document.getElementById('mahsulot-tbody');
+  if (!tbody) return;
+
+  const kirimMap={}, chiqimMap={};
+  state.history.forEach(h=>{
+    if(h.type==='kirim') kirimMap[h.prodId]=(kirimMap[h.prodId]||0)+h.qty;
+    else chiqimMap[h.prodId]=(chiqimMap[h.prodId]||0)+h.qty;
+  });
+
+  if (prods.length===0) {
+    tbody.innerHTML=`<tr><td colspan="11"><div class="empty-state"><div class="icon">🔍</div>Mahsulot topilmadi</div></td></tr>`;
+    return;
+  }
+
+  // 3-qavatli guruhlash:
+  // Level 1: Mahsulot nomi (name bo'yicha)
+  // Level 2: Asosiy SKU + Tavar ID (mainSku+tavarId bo'yicha)
+  // Level 3: Variant SKU lar
+
+  // Muzlamaslik uchun: bir vaqtda eng kop RENDER_CAP ta mahsulot chiziladi
+  const RENDER_CAP = 400;
+  const totalProds = prods.length;
+  if (prods.length > RENDER_CAP) prods = prods.slice(0, RENDER_CAP);
+
+  const nameGroups = [];
+  const nameIndex = new Map();
+  const skuIndexByName = new Map();
+  prods.forEach(p => {
+    const nameKey = (p.name||'').trim();
+    let nameGrp = nameIndex.get(nameKey);
+    if (!nameGrp) {
+      nameGrp = { nameKey, name: p.name, cat: p.cat, skuGroups: [] };
+      nameGroups.push(nameGrp);
+      nameIndex.set(nameKey, nameGrp);
+      skuIndexByName.set(nameKey, new Map());
+    }
+    // Level 2: group by mainSku + tavarId
+    const skuKey = (p.mainSku||'') + '||' + (p.tavarId||'');
+    const skuMap = skuIndexByName.get(nameKey);
+    let skuGrp = skuMap.get(skuKey);
+    if (!skuGrp) {
+      skuGrp = { skuKey, mainSku: p.mainSku, tavarId: p.tavarId, variants: [] };
+      nameGrp.skuGroups.push(skuGrp);
+      skuMap.set(skuKey, skuGrp);
+    }
+    skuGrp.variants.push(p);
+  });
+
+  let html = '';
+  nameGroups.forEach((ng, ngi) => {
+    const ngid = `ng-${ngi}`;
+    // Aggregate totals across ALL sku groups
+    const allVariants = ng.skuGroups.flatMap(sg => sg.variants);
+    const totalKirim  = allVariants.reduce((s,p)=>(kirimMap[p.id]||0)+s, 0);
+    const totalChiqim = allVariants.reduce((s,p)=>(chiqimMap[p.id]||0)+s, 0);
+    const totalSotuv  = allVariants.reduce((s,p)=>(p.sotuv||0)+s, 0);
+    const totalQoldiq = allVariants.reduce((s,p)=>p.qty+s, 0);
+    const first = allVariants[0];
+    const fakeP = { qty: totalQoldiq, minQty: first.minQty * allVariants.length };
+    const st = getStatus(fakeP);
+    const allShelves = [...new Set(allVariants.map(v=>v.shelfCode).filter(Boolean))];
+    const shelvesHtml = allShelves.length > 0
+      ? allShelves.map(sc=>`<span class="loc-pill">${sc}</span>`).join(' ')
+      : `<span class="loc-pill empty">—</span>`;
+    const hasDimFn = (v) => !!(v.uzunlik || v.kenglik || v.balandlik || v.ogirlik || v.logistika);
+    const measuredCount = allVariants.filter(hasDimFn).length;
+    const totalVariants = allVariants.length;
+    const allMeasured = measuredCount === totalVariants;
+    const partialMeasured = measuredCount > 0 && !allMeasured;
+    let dimBtnClass, dimBtnContent;
+    if (allMeasured) { dimBtnClass='dim-btn measured'; dimBtnContent=`✅ O'lchangan${totalVariants>1?` (${measuredCount}/${totalVariants})`:'`'}`; }
+    else if (partialMeasured) { dimBtnClass='dim-btn partial'; dimBtnContent=`❌ O'lchanmagan! (${measuredCount}/${totalVariants})`; }
+    else { dimBtnClass='dim-btn unmeasured'; dimBtnContent=`❌ O'lchanmagan!`; }
+    const allVariantIds = allVariants.map(v=>v.id);
+    const allIdsStr = allVariantIds.join(',');
+    const editBtns = canEdit()
+      ? `<button class="btn-icon" title="Tahrirlash" onclick="openProdModal('edit',${first.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+         <button class="btn-icon" title="Hammasini o'chirish" style="color:var(--red)" onclick="deleteNameGroup('${allIdsStr}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`
+      : '—';
+
+    // ── LEVEL 1: Mahsulot nomi qatori ──
+    const multiSku = ng.skuGroups.length > 1;
+    html += `<tr id="main-${ngid}" style="border-top:2px solid var(--border)">
+      <td style="padding:0.75rem 0.5rem 0.75rem 1rem">
+        <button class="expand-btn" id="btn-${ngid}" onclick="toggleNameGroup('${ngid}')" title="Ko'rish">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+        </button>
+      </td>
+      <td>
+        <div class="td-name">
+          ${first.url
+            ? `<a href="${first.url}" target="_blank" rel="noopener" style="color:var(--text-1);text-decoration:none;display:inline-flex;align-items:center;gap:5px">${ng.name}<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11" style="color:var(--text-3)"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></a>`
+            : ng.name}
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <span class="cat-pill" style="font-size:10px">${ng.cat}</span>
+          ${multiSku
+            ? `<span style="font-size:10px;color:var(--text-3)">${ng.skuGroups.length} asosiy SKU · ${totalVariants} variant</span>`
+            : `<span style="font-family:var(--font-mono);font-size:11px;font-weight:600;color:var(--text-2)">${first.mainSku||''}</span>
+               ${first.tavarId?`<span style="font-size:11px;color:var(--text-3)">${first.tavarId}</span>`:''}
+               ${totalVariants>1?`<span style="font-size:10px;color:var(--text-3)">${totalVariants} variant</span>`:''}`
+          }
+        </div>
+      </td>
+      <td style="font-family:var(--font-mono);font-size:12px">${fmtNum(first.price)}</td>
+      <td style="font-size:12px;color:var(--text-3)">${first.izoh||'—'}</td>
+      <td><div style="display:flex;flex-wrap:wrap;gap:3px">${shelvesHtml}</div></td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--green-mid)">+${fmtNum(totalKirim)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--red)">-${fmtNum(totalChiqim)}</td>
+      <td style="font-family:var(--font-mono);font-size:12px;color:var(--blue)">${fmtNum(totalSotuv)}</td>
+      <td style="font-family:var(--font-mono);font-size:13px;font-weight:700">${fmtNum(totalQoldiq)}</td>
+      <td><span class="stat-badge ${st.cls}">${st.label}</span></td>
+      <td><button class="${dimBtnClass}" onclick="toggleDimPanel('${ngid}',${first.id})">${dimBtnContent}</button></td>
+      <td><div class="action-row">${editBtns}</div></td>
+    </tr>`;
+
+    // Dim panel for name group
+    html += `<tr class="dim-panel-row" id="dim-${ngid}">
+      <td colspan="12" style="background:#f0f5ff;border-bottom:2px solid #c5d8f8;padding:0.75rem 1rem 0.75rem 3rem">
+        <div style="margin-bottom:6px;font-size:11px;font-weight:600;color:var(--blue)">📦 ${ng.name} — O'lchami</div>
+        <div class="dim-grid">
+          <div class="dim-cell"><span class="dim-label">Uzunlik (mm)</span><input class="dim-input" type="number" id="dim-uzunlik-${ngid}" value="${first.uzunlik||''}" placeholder="—" min="0" oninput="updateLogPreviewGrp('${ngid}')"></div>
+          <div class="dim-cell"><span class="dim-label">Kenglik (mm)</span><input class="dim-input" type="number" id="dim-kenglik-${ngid}" value="${first.kenglik||''}" placeholder="—" min="0" oninput="updateLogPreviewGrp('${ngid}')"></div>
+          <div class="dim-cell"><span class="dim-label">Balandlik (mm)</span><input class="dim-input" type="number" id="dim-balandlik-${ngid}" value="${first.balandlik||''}" placeholder="—" min="0" oninput="updateLogPreviewGrp('${ngid}')"></div>
+          <div class="dim-cell"><span class="dim-label">Og'irlik (gr)</span><input class="dim-input" type="number" id="dim-ogirlik-${ngid}" value="${first.ogirlik||''}" placeholder="—" min="0"></div>
+          <div class="dim-cell">
+            <span class="dim-label">Logistika narxi</span>
+            <div id="dim-log-preview-${ngid}" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--green-mid);min-height:32px">${calcLogistika(first.uzunlik,first.kenglik,first.balandlik)?fmtNum(calcLogistika(first.uzunlik,first.kenglik,first.balandlik))+' so\'m':'—'}</div>
+            <div style="font-size:10px;color:var(--text-3);margin-top:2px">Uzum FBO tarifi bo'yicha</div>
+          </div>
+        </div>
+        <button class="dim-save-btn" onclick="saveDimensions('${ngid}',${first.id})">✓ Saqlash</button>
+      </td>
+    </tr>`;
+
+    // ── LEVEL 2 & 3: SKU guruhlari ──
+    ng.skuGroups.forEach((sg, sgi) => {
+      const sgid = `${ngid}-sg-${sgi}`;
+      const sgFirst = sg.variants[0];
+      const sgKirim  = sg.variants.reduce((s,p)=>(kirimMap[p.id]||0)+s,0);
+      const sgChiqim = sg.variants.reduce((s,p)=>(chiqimMap[p.id]||0)+s,0);
+      const sgSotuv  = sg.variants.reduce((s,p)=>(p.sotuv||0)+s,0);
+      const sgQoldiq = sg.variants.reduce((s,p)=>p.qty+s,0);
+      const sgSt = getStatus({qty:sgQoldiq, minQty:sgFirst.minQty*sg.variants.length});
+      const sgShelves = [...new Set(sg.variants.map(v=>v.shelfCode).filter(Boolean))];
+      const sgShelvesHtml = sgShelves.length>0 ? sgShelves.map(sc=>`<span class="loc-pill">${sc}</span>`).join(' ') : `<span class="loc-pill empty">—</span>`;
+
+      const sgHasDimFn = (v) => !!(v.uzunlik || v.kenglik || v.balandlik || v.ogirlik || v.logistika);
+      const sgMeasured = sg.variants.filter(sgHasDimFn).length;
+      const sgTotal = sg.variants.length;
+      const sgAllMeasured = sgMeasured === sgTotal;
+      const sgPartial = sgMeasured > 0 && !sgAllMeasured;
+      let sgDimStatus;
+      if (sgAllMeasured) {
+        const f = sg.variants[0];
+        const cost = calcLogistika(f.uzunlik, f.kenglik, f.balandlik);
+        sgDimStatus = `<span class="var-dim-status var-dim-measured" style="cursor:default">✅ O'lchangan${sgTotal>1?` (${sgMeasured}/${sgTotal})`:''} · ${fmtNum(cost)} so'm</span>`;
+      } else if (sgPartial) {
+        sgDimStatus = `<span class="var-dim-status var-dim-unmeasured" style="cursor:default">❌ O'lchanmagan! (${sgMeasured}/${sgTotal})</span>`;
+      } else {
+        sgDimStatus = `<span class="var-dim-status var-dim-unmeasured" style="cursor:default">❌ O'lchanmagan!</span>`;
+      }
+
+      // Level 2 row — SKU group (only shown if name group is expanded)
+      html += `<tr class="name-child-${ngid} sku-grp-row" id="main-${sgid}" style="display:none;background:var(--surface-2)">
+        <td style="padding:0.6rem 0.25rem 0.6rem 2rem">
+          <button class="expand-btn" id="btn-${sgid}" onclick="toggleSkuGroup('${ngid}','${sgid}')" title="Variantlar" style="width:24px;height:24px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+          </button>
+        </td>
+        <td colspan="1">
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            ${sg.mainSku?`<span style="font-family:var(--font-mono);font-size:12px;font-weight:600;color:var(--text-1)">${sg.mainSku}</span>`:''}
+            ${sg.tavarId?`<span style="font-size:11px;color:var(--text-3)">${sg.tavarId}</span>`:''}
+            ${sg.variants.length>1?`<span style="font-size:10px;color:var(--text-3)">${sg.variants.length} variant</span>`:''}
+          </div>
+        </td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-2)">${fmtNum(sgFirst.price)}</td>
+        <td style="font-size:12px;color:var(--text-3)">${sgFirst.izoh||'—'}</td>
+        <td><div style="display:flex;flex-wrap:wrap;gap:3px">${sgShelvesHtml}</div></td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--green-mid)">+${fmtNum(sgKirim)}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--red)">-${fmtNum(sgChiqim)}</td>
+        <td style="font-family:var(--font-mono);font-size:12px;color:var(--blue)">${fmtNum(sgSotuv)}</td>
+        <td style="font-family:var(--font-mono);font-size:13px;font-weight:600">${fmtNum(sgQoldiq)}</td>
+        <td><span class="stat-badge ${sgSt.cls}">${sgSt.label}</span></td>
+        <td>${sgDimStatus}</td>
+        <td>${canEdit()?`<div class="action-row">
+          <button class="btn-icon" style="color:var(--red)" title="Bu asosiy SKU va barcha variantlarini o'chirish" onclick="deleteSkuGroup('${sg.variants.map(v=>v.id).join(',')}','${(sg.mainSku||sg.tavarId||'').replace(/'/g,'')}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+        </div>`:''}</td>
+      </tr>`;
+
+      // Level 3: variant rows
+      sg.variants.forEach((v, vi) => {
+        const vSt = getStatus(v);
+        const vKirim = kirimMap[v.id]||0;
+        const vChiqim = chiqimMap[v.id]||0;
+        const vHasDim = hasDimFn(v);
+        // Pre-calculate logistics cost
+        const vLogCost = calcLogistika(v.uzunlik, v.kenglik, v.balandlik);
+        const varDimStatus = vHasDim
+          ? `<button class="var-dim-status var-dim-measured" onclick="toggleDimPanelVariant('${sgid}',${v.id},${vi})">✅ O'lchangan · ${fmtNum(vLogCost)} so'm</button>`
+          : `<button class="var-dim-status var-dim-unmeasured" onclick="toggleDimPanelVariant('${sgid}',${v.id},${vi})">❌ O'lchanmagan!</button>`;
+        const varEditBtn = canEdit()
+          ? `<button class="btn-icon" onclick="openProdModal('edit',${v.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>` : '';
+
+        html += `<tr class="name-child-${ngid} sku-child-${sgid} variant-row" id="var-${sgid}-${vi}" style="display:none">
+          <td style="padding:0.5rem 0.25rem 0.5rem 3.5rem"></td>
+          <td>
+            <div class="variant-info">
+              <span class="variant-dot${vHasDim?' measured':''}"></span>
+              <div>
+                <div class="variant-sku">SKU: ${v.sku||'—'}</div>
+                <div class="variant-barcode" style="margin-top:2px">Shtrixkod: ${v.barcode||'—'}</div>
+              </div>
+              ${varEditBtn}
+            </div>
+          </td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-3)">${fmtNum(v.price)}</td>
+          <td style="font-size:12px;color:var(--text-3)">${v.izoh||'—'}</td>
+          <td>${v.shelfCode?`<span class="loc-pill">${v.shelfCode}</span>`:`<span class="loc-pill empty">—</span>`}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--green-mid)">+${fmtNum(vKirim)}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--red)">-${fmtNum(vChiqim)}</td>
+          <td style="font-family:var(--font-mono);font-size:12px;color:var(--blue)">${fmtNum(v.sotuv||0)}</td>
+          <td style="font-family:var(--font-mono);font-size:13px;font-weight:600">${fmtNum(v.qty)}</td>
+          <td><span class="stat-badge ${vSt.cls}">${vSt.label}</span></td>
+          <td>${varDimStatus}</td>
+          <td>${canEdit()?`<button class="btn-icon" style="color:var(--red)" title="Bu variantni o'chirish" onclick="deleteVariant(${v.id},'${v.sku||v.barcode}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`:''}</td>
+        </tr>
+        <tr class="dim-panel-row name-child-${ngid} sku-child-${sgid}" id="dim-var-${sgid}-${vi}" style="display:none">
+          <td colspan="12" style="background:#f0f5ff;border-bottom:1px solid #c5d8f8;padding:0.85rem 1rem 0.85rem 5rem">
+            <div style="margin-bottom:8px;font-size:11px;font-weight:600;color:var(--blue)">📦 ${v.sku||'SKU'} — O'lchami</div>
+            <div class="dim-grid">
+              <div class="dim-cell">
+                <span class="dim-label">Uzunlik (mm)</span>
+                <input class="dim-input" type="number" id="dim-v-uzunlik-${sgid}-${vi}" value="${v.uzunlik||''}" placeholder="—" min="0" oninput="updateLogPreview('${sgid}',${vi})">
+              </div>
+              <div class="dim-cell">
+                <span class="dim-label">Kenglik (mm)</span>
+                <input class="dim-input" type="number" id="dim-v-kenglik-${sgid}-${vi}" value="${v.kenglik||''}" placeholder="—" min="0" oninput="updateLogPreview('${sgid}',${vi})">
+              </div>
+              <div class="dim-cell">
+                <span class="dim-label">Balandlik (mm)</span>
+                <input class="dim-input" type="number" id="dim-v-balandlik-${sgid}-${vi}" value="${v.balandlik||''}" placeholder="—" min="0" oninput="updateLogPreview('${sgid}',${vi})">
+              </div>
+              <div class="dim-cell">
+                <span class="dim-label">Og'irlik (gr)</span>
+                <input class="dim-input" type="number" id="dim-v-ogirlik-${sgid}-${vi}" value="${v.ogirlik||''}" placeholder="—" min="0">
+              </div>
+              <div class="dim-cell">
+                <span class="dim-label">Logistika narxi</span>
+                <div id="dim-v-log-preview-${sgid}-${vi}" style="padding:6px 8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);font-family:var(--font-mono);font-size:13px;font-weight:600;color:var(--green-mid);min-height:32px">${vLogCost ? fmtNum(vLogCost)+' so\'m' : '—'}</div>
+                <div style="font-size:10px;color:var(--text-3);margin-top:2px">Uzum FBO tarifi bo'yicha</div>
+              </div>
+            </div>
+            <button class="dim-save-btn" onclick="saveDimensionsVariant('${sgid}',${v.id},${vi})">✓ Saqlash</button>
+          </td>
+        </tr>`;
+      });
+    });
+  });
+
+    // Unique shelf codes for collapsed view — REMOVED (now in 3-level code above)
+  if (totalProds > RENDER_CAP) {
+    html += `<tr><td colspan="12" style="padding:1rem;text-align:center;background:var(--amber-bg);color:var(--amber);font-size:13px;font-weight:500">Jami ${totalProds} mahsulot — dastlabki ${RENDER_CAP} tasi korsatildi. Aniq mahsulotni qidiruv orqali toping.</td></tr>`;
+  }
+  tbody.innerHTML = html;
+}
+
+function toggleNameGroup(ngid) {
+  const btn = document.getElementById('btn-' + ngid);
+  const isOpen = btn.classList.contains('open');
+  btn.classList.toggle('open', !isOpen);
+  // Show/hide all level-2 (sku groups) and level-3 (variants) children
+  document.querySelectorAll(`.name-child-${ngid}`).forEach(r => {
+    r.style.display = isOpen ? 'none' : 'table-row';
+  });
+  // If closing, also close all sku group expand buttons
+  if (isOpen) {
+    document.querySelectorAll(`[id^="btn-${ngid}-sg-"]`).forEach(b => b.classList.remove('open'));
+    document.querySelectorAll(`[class*="sku-child-${ngid}"]`).forEach(r => r.style.display = 'none');
+  }
+}
+
+function toggleSkuGroup(ngid, sgid) {
+  const btn = document.getElementById('btn-' + sgid);
+  const isOpen = btn.classList.contains('open');
+  btn.classList.toggle('open', !isOpen);
+  document.querySelectorAll(`.sku-child-${sgid}`).forEach(r => {
+    r.style.display = isOpen ? 'none' : 'table-row';
+  });
+}
+
+function toggleDimPanel(gid, prodId) {
+  const panel = document.getElementById('dim-' + gid);
+  if (!panel) return;
+  document.querySelectorAll('.dim-panel-row').forEach(p => {
+    if (p.id !== 'dim-' + gid) p.style.display = 'none';
+  });
+  const isVisible = panel.style.display === 'table-row';
+  panel.style.display = isVisible ? 'none' : 'table-row';
+}
+
+function toggleDimPanelVariant(sgid, prodId, vi) {
+  const panelId = `dim-var-${sgid}-${vi}`;
+  const panel = document.getElementById(panelId);
+  if (!panel) return;
+  document.querySelectorAll('.dim-panel-row').forEach(p => {
+    if (p.id !== panelId) p.style.display = 'none';
+  });
+  const isVisible = panel.style.display === 'table-row';
+  panel.style.display = isVisible ? 'none' : 'table-row';
+}
+
+function saveDimensions(gid, prodId) {
+  const p = getProduct(prodId);
+  if (!p) return;
+  p.uzunlik   = document.getElementById(`dim-uzunlik-${gid}`)?.value || '';
+  p.kenglik   = document.getElementById(`dim-kenglik-${gid}`)?.value || '';
+  p.balandlik = document.getElementById(`dim-balandlik-${gid}`)?.value || '';
+  p.ogirlik   = document.getElementById(`dim-ogirlik-${gid}`)?.value || '';
+  p.logistika = String(calcLogistika(p.uzunlik, p.kenglik, p.balandlik));
+  saveState(); renderMahsulotlar();
+  toast('O\'lcham saqlandi ✓');
+}
+
+// ============================================================
+// LOGISTIKA HISOBLASH (Uzum FBO, 2026-yil 4-maydan)
+// ============================================================
+function calcLogistika(uzunlik, kenglik, balandlik) {
+  const u = parseFloat(uzunlik)||0;
+  const k = parseFloat(kenglik)||0;
+  const b = parseFloat(balandlik)||0;
+  if (!u || !k || !b) return 50000; // o'lcham yo'q → max tarif
+  const litr = Math.ceil(u * k * b / 1000000); // mm³ → litr, yaxlitlash
+  if (litr <= 1) return 5250;
+  const cost = 5250 + (litr - 1) * 250;
+  return Math.min(cost, 50000);
+}
+
+function updateLogPreviewGrp(ngid) {
+  const u = document.getElementById(`dim-uzunlik-${ngid}`)?.value||0;
+  const k = document.getElementById(`dim-kenglik-${ngid}`)?.value||0;
+  const b = document.getElementById(`dim-balandlik-${ngid}`)?.value||0;
+  const cost = calcLogistika(u, k, b);
+  const el = document.getElementById(`dim-log-preview-${ngid}`);
+  if (el) {
+    const litr = (u&&k&&b) ? Math.ceil(u*k*b/1000000) : null;
+    el.textContent = fmtNum(cost) + ' so\'m' + (litr ? ` (${litr} l)` : ' (o\'lcham yo\'q)');
+    el.style.color = cost >= 50000 ? 'var(--amber)' : 'var(--green-mid)';
+  }
+}
+
+function updateLogPreview(sgid, vi) {
+  const u = document.getElementById(`dim-v-uzunlik-${sgid}-${vi}`)?.value||0;
+  const k = document.getElementById(`dim-v-kenglik-${sgid}-${vi}`)?.value||0;
+  const b = document.getElementById(`dim-v-balandlik-${sgid}-${vi}`)?.value||0;
+  const cost = calcLogistika(u, k, b);
+  const el = document.getElementById(`dim-v-log-preview-${sgid}-${vi}`);
+  if (el) {
+    const litr = (u&&k&&b) ? Math.ceil(u*k*b/1000000) : null;
+    el.textContent = fmtNum(cost) + ' so\'m' + (litr ? ` (${litr} l)` : ' (o\'lcham yo\'q)');
+    el.style.color = cost >= 50000 ? 'var(--amber)' : 'var(--green-mid)';
+  }
+}
+
+function saveDimensionsVariant(sgid, prodId, vi) {
+  const p = getProduct(prodId);
+  if (!p) return;
+  p.uzunlik   = document.getElementById(`dim-v-uzunlik-${sgid}-${vi}`)?.value || '';
+  p.kenglik   = document.getElementById(`dim-v-kenglik-${sgid}-${vi}`)?.value || '';
+  p.balandlik = document.getElementById(`dim-v-balandlik-${sgid}-${vi}`)?.value || '';
+  p.ogirlik   = document.getElementById(`dim-v-ogirlik-${sgid}-${vi}`)?.value || '';
+  // logistika is auto-calculated from dimensions, store computed value
+  p.logistika = String(calcLogistika(p.uzunlik, p.kenglik, p.balandlik));
+  saveState(); renderMahsulotlar();
+  toast('SKU o\'lchami saqlandi ✓');
+}
+
+// ============================================================
+// MAHSULOT MODAL
+// ============================================================
+// Shelf code helpers
+function buildShelfCode(bolim, stelaj, qavat, quti) {
+  if (!bolim && !stelaj) return '';
+  let code = (bolim||'').toUpperCase();
+  if (stelaj) code += stelaj;
+  if (qavat) code += '-' + qavat;
+  if (quti) code += '/' + quti;
+  return code;
+}
+function parseShelfCode(code) {
+  if (!code) return { bolim:'', stelaj:'', qavat:'', quti:'' };
+  // Format: A3-2/1  or  A3-2  or  A3
+  const m = code.match(/^([A-Za-z]+)(\d+)?(?:-(\d+))?(?:\/(\d+))?$/);
+  if (!m) return { bolim: code, stelaj:'', qavat:'', quti:'' };
+  return { bolim: m[1]||'', stelaj: m[2]||'', qavat: m[3]||'', quti: m[4]||'' };
+}
+function updateShelfPreview() {
+  const b = document.getElementById('f-shelf-bolim')?.value||'';
+  const s = document.getElementById('f-shelf-stelaj')?.value||'';
+  const q = document.getElementById('f-shelf-qavat')?.value||'';
+  const k = document.getElementById('f-shelf-quti')?.value||'';
+  const code = buildShelfCode(b,s,q,k);
+  const el = document.getElementById('shelf-preview');
+  if (el) el.textContent = code || '—';
+}
+// attach listeners after DOM ready
+document.addEventListener('DOMContentLoaded', () => {
+  ['f-shelf-bolim','f-shelf-stelaj','f-shelf-qavat','f-shelf-quti'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateShelfPreview);
+  });
+  // Sessiya tiklash: saqlangan token bilan /api/me
+  (async () => {
+    const token = sessTokenVal();
+    if (!token) return;
+    try {
+      const res = await fetch(whBackendUrl() + '/api/me', { headers: { 'X-Session-Token': token } });
+      if (res.ok) {
+        const j = await res.json();
+        if (j.user) enterApp(j.user);
+      } else {
+        setSessToken(null);
+      }
+    } catch(e) { /* offline - login ekranida qoladi */ }
+  })();
+});
+
+function openProdModal(mode, id) {
+  updateLocFilter();
+  document.getElementById('prod-modal').classList.add('open');
+  if (mode==='add') {
+    document.getElementById('prod-modal-title').textContent="Yangi mahsulot qo'shish";
+    document.getElementById('edit-id').value='';
+    ['f-name','f-mainsku','f-tavarid','f-barcode','f-izoh','f-url','f-shelf-bolim','f-shelf-stelaj','f-shelf-qavat','f-shelf-quti'].forEach(i=>{const el=document.getElementById(i);if(el)el.value='';});
+    document.getElementById('f-sku').value='PR-'+state.nextId;
+    document.getElementById('f-qty').value='0'; document.getElementById('f-max').value='1000';
+    document.getElementById('f-min').value='100'; document.getElementById('f-price').value='';
+    document.getElementById('f-sotuv').value='0';
+    updateShelfPreview();
+  } else {
+    const p=getProduct(id);
+    document.getElementById('prod-modal-title').textContent='Mahsulotni tahrirlash';
+    document.getElementById('edit-id').value=p.id;
+    document.getElementById('f-name').value=p.name;
+    document.getElementById('f-mainsku').value=p.mainSku||'';
+    document.getElementById('f-tavarid').value=p.tavarId||'';
+    document.getElementById('f-url').value=p.url||'';
+    document.getElementById('f-sku').value=p.sku;
+    document.getElementById('f-barcode').value=p.barcode||'';
+    document.getElementById('f-cat').value=p.cat;
+    document.getElementById('f-loc').value=p.locId||'';
+    document.getElementById('f-izoh').value=p.izoh||'';
+    document.getElementById('f-price').value=p.price;
+    document.getElementById('f-sotuv').value=p.sotuv||0;
+    document.getElementById('f-qty').value=p.qty;
+    document.getElementById('f-max').value=p.max;
+    document.getElementById('f-min').value=p.minQty;
+    // parse shelf code
+    const sc = parseShelfCode(p.shelfCode||'');
+    document.getElementById('f-shelf-bolim').value=sc.bolim;
+    document.getElementById('f-shelf-stelaj').value=sc.stelaj;
+    document.getElementById('f-shelf-qavat').value=sc.qavat;
+    document.getElementById('f-shelf-quti').value=sc.quti;
+    updateShelfPreview();
+  }
+}
+function closeProdModal() { document.getElementById('prod-modal').classList.remove('open'); }
+
+function saveProduct() {
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { toast('Mahsulot nomi kiritilishi shart!','red'); return; }
+  const editId = document.getElementById('edit-id').value;
+  const shelfCode = buildShelfCode(
+    document.getElementById('f-shelf-bolim').value,
+    document.getElementById('f-shelf-stelaj').value,
+    document.getElementById('f-shelf-qavat').value,
+    document.getElementById('f-shelf-quti').value
+  );
+  const data = {
+    name,
+    mainSku: document.getElementById('f-mainsku').value||'',
+    tavarId: document.getElementById('f-tavarid').value||'',
+    url: document.getElementById('f-url').value||'',
+    sku: document.getElementById('f-sku').value||'PR-'+state.nextId,
+    barcode: document.getElementById('f-barcode').value||'',
+    cat: document.getElementById('f-cat').value,
+    locId: parseInt(document.getElementById('f-loc').value)||1,
+    izoh: document.getElementById('f-izoh').value||'',
+    price: parseFloat(document.getElementById('f-price').value)||0,
+    sotuv: parseFloat(document.getElementById('f-sotuv').value)||0,
+    qty: parseFloat(document.getElementById('f-qty').value)||0,
+    max: parseFloat(document.getElementById('f-max').value)||1000,
+    minQty: parseFloat(document.getElementById('f-min').value)||100,
+    shelfCode,
+  };
+  if (editId) {
+    const i=state.products.findIndex(p=>p.id==editId);
+    // preserve dimension fields
+    const existing = state.products[i];
+    state.products[i]={...existing,...data,
+      uzunlik: existing.uzunlik||'', kenglik: existing.kenglik||'',
+      balandlik: existing.balandlik||'', ogirlik: existing.ogirlik||'',
+      logistika: existing.logistika||'', url: data.url||existing.url||''
+    };
+    toast('Yangilandi ✓');
+  }
+  else { state.products.push({id:state.nextId++,...data, uzunlik:'',kenglik:'',balandlik:'',ogirlik:'',logistika:'',url:data.url||''}); toast('Qo\'shildi ✓'); }
+  saveState(); closeProdModal(); renderMahsulotlar(); renderDashboard();
+}
+function deleteProduct(id) {
+  const p=getProduct(id);
+  if (!p) return;
+  if (!confirm(`"${p.name}"ni o'chirishni tasdiqlaysizmi?`)) return;
+  state.products=state.products.filter(x=>x.id!==id);
+  saveState(); renderMahsulotlar(); renderDashboard(); toast('O\'chirildi','amber');
+}
+
+// ============================================================
+// GURUH O'CHIRISH
+// ============================================================
+function deleteVariant(id, label) {
+  if (!confirm(`"${label}" variantini o'chirishni tasdiqlaysizmi?\n(Faqat shu 1 ta variant o'chadi)`)) return;
+  state.products = state.products.filter(p => p.id !== id);
+  saveState(); renderMahsulotlar(); renderDashboard();
+  toast('Variant o\'chirildi', 'amber');
+}
+
+function deleteSkuGroup(ids, label) {
+  if (typeof ids === 'string') {
+    ids = ids.replace(/\[|\]/g,'').split(',').map(Number).filter(Boolean);
+  }
+  const count = ids.length;
+  if (!confirm(`"${label}" asosiy SKU va unga bog'liq ${count} ta variantni o'chirishni tasdiqlaysizmi?`)) return;
+  state.products = state.products.filter(p => !ids.includes(p.id));
+  saveState(); renderMahsulotlar(); renderDashboard();
+  toast(`${count} ta variant o'chirildi`, 'amber');
+}
+
+function deleteNameGroup(ids) {
+  if (typeof ids === 'string') {
+    ids = ids.replace(/\[|\]/g,'').split(',').map(Number).filter(Boolean);
+  }
+  const prod = state.products.find(p => p.id === ids[0]);
+  const name = prod?.name || '';
+  const count = ids.length;
+  if (!confirm(`"${name}" mahsulotini barcha ${count} ta variant bilan birga o'chirishni tasdiqlaysizmi?\n\nBu amalni ortga qaytarib bo'lmaydi!`)) return;
+  state.products = state.products.filter(p => !ids.includes(p.id));
+  saveState(); renderMahsulotlar(); renderDashboard();
+  toast(`"${name}" va ${count} ta variant o'chirildi`, 'amber');
+}
+
+// ============================================================
+// KIRIM / CHIQIM
+// ============================================================
+function populateSelects() {
+  ['kirim-prod','chiqim-prod'].forEach(id=>{
+    const sel=document.getElementById(id);
+    if(sel) sel.innerHTML=state.products.map(p=>`<option value="${p.id}">${p.name} — ${getLocation(p.locId)?.name||'?'} (${fmtNum(p.qty)} kg)</option>`).join('');
+  });
+}
+function doKirim() {
+  if (!canEdit()) { toast('Sizda ruxsat yo\'q','red'); return; }
+  const prodId=parseInt(document.getElementById('kirim-prod').value);
+  const qty=parseFloat(document.getElementById('kirim-qty').value)||0;
+  const note=document.getElementById('kirim-note').value;
+  if (qty<=0) { toast('Miqdor 0 dan katta bo\'lishi kerak!','red'); return; }
+  const p=getProduct(prodId); p.qty+=qty;
+  state.history.push({id:state.nextHId++,date:nowStr(),prodId,empId:currentUser.id,type:'kirim',qty,note});
+  saveState(); populateSelects(); renderHistory(); renderDashboard();
+  document.getElementById('kirim-qty').value=''; document.getElementById('kirim-note').value='';
+  toast(`${p.name}: +${fmtNum(qty)} kg kirim ✓`);
+}
+function doChiqim() {
+  if (!canEdit()) { toast('Sizda ruxsat yo\'q','red'); return; }
+  const prodId=parseInt(document.getElementById('chiqim-prod').value);
+  const qty=parseFloat(document.getElementById('chiqim-qty').value)||0;
+  const note=document.getElementById('chiqim-note').value;
+  const p=getProduct(prodId);
+  if (qty<=0) { toast('Miqdor 0 dan katta bo\'lishi kerak!','red'); return; }
+  if (qty>p.qty) { toast(`Yetarli mahsulot yo'q! Omborda ${fmtNum(p.qty)} kg bor.`,'red'); return; }
+  p.qty-=qty;
+  state.history.push({id:state.nextHId++,date:nowStr(),prodId,empId:currentUser.id,type:'chiqim',qty,note});
+  saveState(); populateSelects(); renderHistory(); renderDashboard();
+  document.getElementById('chiqim-qty').value=''; document.getElementById('chiqim-note').value='';
+  toast(`${p.name}: ${fmtNum(qty)} kg chiqim ✓`,'amber');
+}
+function renderHistory() {
+  const filter=document.getElementById('history-filter')?.value||'';
+  let hist=[...state.history].reverse();
+  if (filter) hist=hist.filter(h=>h.type===filter);
+  const tbody=document.getElementById('history-tbody');
+  if (!tbody) return;
+  tbody.innerHTML=hist.length===0
+    ? '<tr><td colspan="6"><div class="empty-state"><div class="icon">📋</div>Harakat topilmadi</div></td></tr>'
+    : hist.map(h=>{
+        const p=getProduct(h.prodId); const emp=getEmployee(h.empId);
+        return `<tr><td style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${h.date}</td><td style="font-size:12px;color:var(--text-2)">${emp?emp.name:'—'}</td><td class="td-name">${p?p.name:'—'}</td><td><span class="history-badge history-${h.type}">${h.type==='kirim'?'↓ Kirim':'↑ Chiqim'}</span></td><td style="font-family:var(--font-mono)">${fmtNum(h.qty)} kg</td><td style="color:var(--text-3)">${h.note||'—'}</td></tr>`;
+      }).join('');
+}
+
+// ============================================================
+// HISOBOT
+// ============================================================
+function renderHisobot() {
+  const prods=state.products, hist=state.history;
+  const totalQty=prods.reduce((s,p)=>s+p.qty,0);
+  const totalVal=prods.reduce((s,p)=>s+p.qty*p.price,0);
+  const totalKirim=hist.filter(h=>h.type==='kirim').reduce((s,h)=>s+h.qty,0);
+  const totalChiqim=hist.filter(h=>h.type==='chiqim').reduce((s,h)=>s+h.qty,0);
+  const low=prods.filter(p=>p.qty<p.minQty);
+  const catMap={};
+  prods.forEach(p=>{if(!catMap[p.cat])catMap[p.cat]={qty:0,val:0,count:0};catMap[p.cat].qty+=p.qty;catMap[p.cat].val+=p.qty*p.price;catMap[p.cat].count++;});
+  const locMap={};
+  prods.forEach(p=>{const l=getLocation(p.locId);const key=l?l.name:'Noma\'lum';if(!locMap[key])locMap[key]={qty:0,val:0};locMap[key].qty+=p.qty;locMap[key].val+=p.qty*p.price;});
+
+  document.getElementById('hisobot-content').innerHTML=`
+    <div class="report-grid">
+      <div class="report-card"><div class="stat-label">Jami ombor</div><div class="report-num green">${fmtNum(totalQty)}</div><div style="font-size:12px;color:var(--text-3)">${prods.length} tur · ${state.locations.length} joy</div></div>
+      <div class="report-card"><div class="stat-label">Jami qiymat</div><div class="report-num green" style="font-size:20px">${fmtNum(totalVal)}</div><div style="font-size:12px;color:var(--text-3)">so'm</div></div>
+      <div class="report-card"><div class="stat-label">Jami kirim</div><div class="report-num green">${fmtNum(totalKirim)}</div><div style="font-size:12px;color:var(--text-3)">kg · ${hist.filter(h=>h.type==='kirim').length} marta</div></div>
+      <div class="report-card"><div class="stat-label">Jami chiqim</div><div class="report-num red">${fmtNum(totalChiqim)}</div><div style="font-size:12px;color:var(--text-3)">kg · ${hist.filter(h=>h.type==='chiqim').length} marta</div></div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header"><span class="card-title">Ombor joylari bo'yicha</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Joy</th><th>Jami miqdor</th><th>Jami qiymat</th></tr></thead><tbody>
+        ${Object.entries(locMap).map(([loc,v])=>`<tr><td><span class="loc-pill">${loc}</span></td><td style="font-family:var(--font-mono)">${fmtNum(v.qty)} kg</td><td style="font-family:var(--font-mono)">${fmtNum(v.val)} so'm</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="card" style="margin-bottom:1.5rem">
+      <div class="card-header"><span class="card-title">Kategoriya bo'yicha</span></div>
+      <div class="table-wrap"><table><thead><tr><th>Kategoriya</th><th>Soni</th><th>Miqdor</th><th>Qiymat</th></tr></thead><tbody>
+        ${Object.entries(catMap).map(([cat,v])=>`<tr><td><span class="cat-pill">${cat}</span></td><td>${v.count} tur</td><td style="font-family:var(--font-mono)">${fmtNum(v.qty)} kg</td><td style="font-family:var(--font-mono)">${fmtNum(v.val)} so'm</td></tr>`).join('')}
+      </tbody></table></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><span class="card-title">Kam qolgan mahsulotlar (${low.length} ta)</span></div>
+      <div class="table-wrap">${low.length===0
+        ? '<div class="empty-state"><div class="icon">✅</div>Barcha mahsulotlar yetarli</div>'
+        : `<table><thead><tr><th>Mahsulot</th><th>Joy</th><th>Mavjud</th><th>Minimal daraja</th></tr></thead><tbody>${low.map(p=>`<tr><td class="td-name">${p.name}</td><td><span class="loc-pill">${getLocation(p.locId)?.name||'—'}</span></td><td style="font-family:var(--font-mono);color:var(--red)">${fmtNum(p.qty)} kg</td><td style="font-family:var(--font-mono)">${fmtNum(p.minQty)} kg</td></tr>`).join('')}</tbody></table>`
+      }</div>
+    </div>`;
+}
+
+// ============================================================
+// HODIMLAR
+// ============================================================
+// Server users -> state.employees ko'zgu (history/joylashuv nomlari uchun). Faqat admin.
+async function refreshEmployeesMirror() {
+  try {
+    const res = await adminApi('/api/admin/users');
+    if (!res.ok) return;
+    const j = await res.json();
+    state.employees = (j.users||[]).map(u => ({ id:u.id, name:u.name, login:u.login, phone:u.phone, position:u.position, role:u.role, status:u.status }));
+    saveState();  // blob'ga yoz (non-adminlar nom ko'rishi uchun)
+    renderEmpTable();
+  } catch(e) { /* session_expired yoki tarmoq */ }
+}
+function renderEmpTable() {
+  const tb = document.getElementById('emp-tbody');
+  if (!tb) return;
+  const roleName={admin:'Administrator',ombor:'Ombor xodimi',hisobot:'Hisobotchi'};
+  const roleClass={admin:'emp-role-admin',ombor:'emp-role-ombor',hisobot:'emp-role-hisobot'};
+  tb.innerHTML=state.employees.map(e=>`<tr>
+    <td><div class="td-name">${e.name}</div><div class="td-sku">${e.phone||''}</div></td>
+    <td style="font-family:var(--font-mono);font-size:12px">${e.login}</td>
+    <td>${e.position||'—'}</td>
+    <td><span class="stat-badge ${roleClass[e.role]||''}">${roleName[e.role]||e.role}</span></td>
+    <td><span class="stat-badge ${e.status==='active'?'emp-status-active':'emp-status-blocked'}">${e.status==='active'?'Faol':'Bloklangan'}</span></td>
+    <td><div class="action-row">
+      <button class="btn-icon" onclick="openEmpModal('edit',${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+      ${e.id!==currentUser?.id?`<button class="btn-icon" style="color:var(--red)" onclick="deleteEmployee(${e.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`:''}
+    </div></td>
+  </tr>`).join('');
+}
+function renderHodimlar() {
+  renderEmpTable();              // avval ko'zgudan tez ko'rsat
+  if (isAdmin()) refreshEmployeesMirror();  // keyin serverdan yangila
+}
+function openEmpModal(mode,id) {
+  document.getElementById('emp-modal').classList.add('open');
+  if (mode==='add') {
+    document.getElementById('emp-modal-title').textContent="Yangi hodim qo'shish";
+    document.getElementById('emp-edit-id').value='';
+    ['e-name','e-phone','e-login','e-pass','e-position'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('e-pass').placeholder='Kamida 6 belgi';
+    document.getElementById('e-role').value='ombor'; document.getElementById('e-status').value='active';
+  } else {
+    const e=getEmployee(id);
+    document.getElementById('emp-modal-title').textContent='Hodimni tahrirlash';
+    document.getElementById('emp-edit-id').value=e.id;
+    document.getElementById('e-name').value=e.name; document.getElementById('e-phone').value=e.phone||'';
+    document.getElementById('e-login').value=e.login;
+    document.getElementById('e-pass').value='';  // parol serverdan kelmaydi
+    document.getElementById('e-pass').placeholder="O'zgartirmaslik uchun bo'sh qoldiring";
+    document.getElementById('e-position').value=e.position||'';
+    document.getElementById('e-role').value=e.role; document.getElementById('e-status').value=e.status;
+  }
+}
+function closeEmpModal() { document.getElementById('emp-modal').classList.remove('open'); }
+async function saveEmployee() {
+  const name=document.getElementById('e-name').value.trim();
+  const login=document.getElementById('e-login').value.trim();
+  const pass=document.getElementById('e-pass').value;
+  if (!name||!login) { toast('Ism va login kiritilishi shart!','red'); return; }
+  const editId=document.getElementById('emp-edit-id').value;
+  const data={ name, login, phone:document.getElementById('e-phone').value, position:document.getElementById('e-position').value, role:document.getElementById('e-role').value, status:document.getElementById('e-status').value };
+  try {
+    let res;
+    if (editId) {
+      if (pass) { if (pass.length<6) { toast('Parol kamida 6 belgi!','red'); return; } data.password=pass; }
+      res = await adminApi('/api/admin/users/'+editId, { method:'PATCH', body: JSON.stringify(data) });
+    } else {
+      if (!pass||pass.length<6) { toast('Parol kamida 6 belgi bo\'lishi kerak!','red'); return; }
+      data.password=pass;
+      res = await adminApi('/api/admin/users', { method:'POST', body: JSON.stringify(data) });
+    }
+    if (res.status===409) { toast('Bu login allaqachon band!','red'); return; }
+    if (!res.ok) { const j=await res.json().catch(()=>({})); toast(j.error||('Server xato: '+res.status),'red'); return; }
+    toast(editId?'Hodim yangilandi ✓':'Hodim qo\'shildi ✓');
+  } catch(e) { if (e.message!=='session_expired') toast('Serverga ulanib bolmadi','red'); return; }
+  closeEmpModal();
+  await refreshEmployeesMirror();
+}
+async function deleteEmployee(id) {
+  const e=getEmployee(id);
+  if (!confirm(`"${e?e.name:''}"ni o'chirishni tasdiqlaysizmi?`)) return;
+  try {
+    const res = await adminApi('/api/admin/users/'+id, { method:'DELETE' });
+    if (!res.ok) { const j=await res.json().catch(()=>({})); toast(j.error||'O\'chirilmadi','red'); return; }
+  } catch(e) { if (e.message!=='session_expired') toast('Serverga ulanib bolmadi','red'); return; }
+  toast('Hodim o\'chirildi','amber');
+  await refreshEmployeesMirror();
+}
+
+// ============================================================
+// JOYLASHUV
+// ============================================================
+function renderLocations() {
+  const el=document.getElementById('loc-list');
+  el.innerHTML=state.locations.length===0
+    ? '<div class="empty-state"><div class="icon">📍</div>Hali joy qo\'shilmagan</div>'
+    : state.locations.map(l=>{
+        const mgr=getEmployee(l.manager);
+        const prodCount=state.products.filter(p=>p.locId===l.id).length;
+        const totalQty=state.products.filter(p=>p.locId===l.id).reduce((s,p)=>s+p.qty,0);
+        return `<div class="loc-card">
+          <div>
+            <div style="font-weight:600;font-size:14px;margin-bottom:4px">📍 ${l.name}</div>
+            <div style="font-size:12px;color:var(--text-3)">${l.address||'—'} &nbsp;·&nbsp; Mas'ul: ${mgr?mgr.name:'—'}</div>
+            <div style="margin-top:6px;display:flex;gap:8px">
+              <span class="stat-badge badge-green">${prodCount} mahsulot turi</span>
+              <span class="stat-badge badge-blue">${fmtNum(totalQty)} kg</span>
+            </div>
+            ${l.note?`<div style="font-size:11px;color:var(--text-3);margin-top:4px">${l.note}</div>`:''}
+          </div>
+          <div class="action-row">
+            <button class="btn-icon" onclick="openLocModal(${l.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
+            ${state.locations.length>1?`<button class="btn-icon" style="color:var(--red)" onclick="deleteLocation(${l.id})"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>`:''}
+          </div>
+        </div>`;
+      }).join('');
+}
+function openLocModal(id) {
+  document.getElementById('loc-modal').classList.add('open');
+  const mgSel=document.getElementById('loc-manager');
+  mgSel.innerHTML=state.employees.map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  document.getElementById('loc-edit-id').value='';
+  if (id) {
+    const l=getLocation(id);
+    document.getElementById('loc-edit-id').value=l.id;
+    document.getElementById('loc-name').value=l.name;
+    document.getElementById('loc-address').value=l.address||'';
+    document.getElementById('loc-manager').value=l.manager||'';
+    document.getElementById('loc-note').value=l.note||'';
+  } else {
+    ['loc-name','loc-address','loc-note'].forEach(i=>document.getElementById(i).value='');
+  }
+}
+function closeLocModal() { document.getElementById('loc-modal').classList.remove('open'); }
+function saveLocation() {
+  const name=document.getElementById('loc-name').value.trim();
+  if (!name) { toast('Joy nomi kiritilishi shart!','red'); return; }
+  const editId=document.getElementById('loc-edit-id').value;
+  const data={name,address:document.getElementById('loc-address').value,manager:parseInt(document.getElementById('loc-manager').value)||1,note:document.getElementById('loc-note').value};
+  if (editId) { const i=state.locations.findIndex(l=>l.id==editId); state.locations[i]={...state.locations[i],...data}; toast('Joy yangilandi ✓'); }
+  else { state.locations.push({id:state.nextLId++,...data}); toast('Joy qo\'shildi ✓'); }
+  saveState(); closeLocModal(); renderLocations(); updateLocFilter();
+  document.getElementById('cur-location-label').textContent=state.locations[0]?.name||'Ombor';
+}
+function deleteLocation(id) {
+  if (state.products.some(p=>p.locId===id)) { toast('Bu joyda mahsulotlar bor, avval ularni ko\'chiring!','red'); return; }
+  if (!confirm('Bu joyni o\'chirishni tasdiqlaysizmi?')) return;
+  state.locations=state.locations.filter(l=>l.id!==id);
+  saveState(); renderLocations(); updateLocFilter(); toast('Joy o\'chirildi','amber');
+}
+
+// ============================================================
+// IMPORT / EXPORT  — Uzum Market CSV format
+// ============================================================
+
+// Parse CSV respecting quoted fields (which may contain commas and newlines)
+function parseCSVFull(text) {
+  const rows = [];
+  let row = [], field = '', inQ = false, i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (inQ) {
+      if (ch === '"') {
+        if (text[i+1] === '"') { field += '"'; i += 2; continue; }
+        inQ = false; i++; continue;
+      }
+      field += ch; i++; continue;
+    }
+    if (ch === '"') { inQ = true; i++; continue; }
+    if (ch === ',') { row.push(field.trim()); field = ''; i++; continue; }
+    if (ch === '\n') {
+      row.push(field.trim()); field = '';
+      rows.push(row); row = []; i++; continue;
+    }
+    if (ch === '\r') { i++; continue; }
+    field += ch; i++;
+  }
+  if (field || row.length) { row.push(field.trim()); rows.push(row); }
+  return rows;
+}
+
+function handleCSV(input) {
+  const file = input.files[0]; if (!file) return;
+  const selectedEncoding = document.getElementById('csv-encoding')?.value || 'auto';
+
+  const tryRead = (encoding) => new Promise((resolve) => {
+    const r = new FileReader();
+    r.onload = (e) => resolve(e.target.result);
+    r.readAsText(file, encoding);
+  });
+
+  const isGarbled = (text) => {
+    const garbledCount = (text.match(/[\xC0-\xFF]{2,}/g) || []).length;
+    const cyrCount = (text.match(/[а-яёА-ЯЁ]/g) || []).length;
+    return garbledCount > 5 && cyrCount < 5;
+  };
+
+  const reader = new FileReader();
+  reader.onload = async function(e) {
+    try {
+      let text = e.target.result;
+
+      if (selectedEncoding === 'auto') {
+        if (isGarbled(text)) {
+          text = await tryRead('windows-1251');
+        }
+        if (isGarbled(text)) {
+          text = await tryRead('iso-8859-5');
+        }
+      }
+
+      processCSV(text);
+    } catch(err) {
+      toast('Fayl o\'qishda xatolik: ' + err.message, 'red');
+    }
+  };
+  reader.readAsText(file, selectedEncoding === 'auto' ? 'UTF-8' : selectedEncoding);
+}
+
+function processCSV(text) {
+  try {
+      const rows = parseCSVFull(text);
+      if (rows.length < 2) { toast('Fayl bo\'sh yoki noto\'g\'ri format', 'red'); return; }
+
+      // Find header row
+      let headerIdx = -1;
+      for (let i = 0; i < Math.min(rows.length, 5); i++) {
+        const joined = rows[i].join('|').toLowerCase();
+        if (joined.includes('sku') || joined.includes('shtrixkod') || joined.includes('mahsulot')) {
+          headerIdx = i; break;
+        }
+      }
+      if (headerIdx < 0) { toast('Sarlavha qatori topilmadi.', 'red'); return; }
+
+      const headers = rows[headerIdx].map(h => h.toLowerCase().trim());
+
+      // Smart column finder — for duplicate names (like "sku"), find by position order
+      const ciAll = (name) => {
+        const found = [];
+        headers.forEach((h, idx) => { if (h.includes(name)) found.push(idx); });
+        return found;
+      };
+      const ci = (names) => {
+        for (const n of names) {
+          const idx = headers.findIndex(h => h.includes(n));
+          if (idx >= 0) return idx;
+        }
+        return -1;
+      };
+
+      const iName    = ci(['mahsulot nomi']);
+      const iMainSku = ci(['asosiy sku']);
+      const iTavarId = ci(['tavar id']);
+      const iPrice   = ci(['tan narxi', 'narxi']);
+      const iIzoh    = ci(['izoh']);
+      const iOmbor   = ci(['ombor']);
+      const iKirim   = ci(['kirim']);
+      const iChiqim  = ci(['chiqim']);
+      const iSotuv   = ci(['sotuv']);
+      const iQoldiq  = ci(['qoldiq']);
+
+      // "sku" appears twice: first = asosiy sku (same col), second = variant sku
+      // "shtrixkod" = barcode
+      const allSkuCols = ciAll('sku');
+      const iBarcode = ci(['shtrixkod']);
+
+      // Variant SKU: the SKU column that comes AFTER asosiy sku
+      // If asosiy sku col exists, variant sku = next sku col after it
+      // If only one sku col, that's the variant sku
+      let iSku = -1;
+      if (allSkuCols.length >= 2) {
+        // Find the sku col that is NOT asosiy sku
+        iSku = allSkuCols.find(c => c !== iMainSku) ?? allSkuCols[allSkuCols.length - 1];
+      } else if (allSkuCols.length === 1) {
+        iSku = allSkuCols[0];
+        // If this is same as mainSku column, there's no separate variant sku col
+        // In Uzum format: col order is: mahsulot nomi | asosiy sku | tavar id | sku(variant) | shtrixkod | narx
+        // So variant sku is always the col after tavar id
+      }
+
+      // Positional fallback: Uzum Market column order is fixed:
+      // 0:mahsulot nomi, 1:asosiy sku, 2:tavar id, 3:sku(variant), 4:shtrixkod, 5:tan narxi, 6:izoh, 7:ombor, 8:kirim, 9:chiqim, 10:sotuv, 11:qoldiq
+      // If header detection fails for sku/barcode, use positional
+      const usePositional = iName <= 0 && iMainSku <= 0;
+      const pName    = usePositional ? 0  : iName;
+      const pMainSku = usePositional ? 1  : iMainSku;
+      const pTavarId = usePositional ? 2  : iTavarId;
+      const pSku     = usePositional ? 3  : iSku;
+      const pBarcode = usePositional ? 4  : iBarcode;
+      const pPrice   = usePositional ? 5  : iPrice;
+      const pIzoh    = usePositional ? 6  : iIzoh;
+      const pOmbor   = usePositional ? 7  : iOmbor;
+      const pKirim   = usePositional ? 8  : iKirim;
+      const pChiqim  = usePositional ? 9  : iChiqim;
+      const pSotuv   = usePositional ? 10 : iSotuv;
+      const pQoldiq  = usePositional ? 11 : iQoldiq;
+
+      importData = [];
+      let lastName = '', lastMainSku = '', lastTavarId = '';
+
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const r = rows[i];
+        if (!r || r.length < 2) continue;
+
+        // Skip separator rows
+        const allEmpty = r.every(c => !c || c === '-' || c === '—');
+        if (allEmpty) continue;
+
+        const get = (idx) => (idx >= 0 && idx < r.length) ? (r[idx] || '').trim() : '';
+
+        // Merged cells: inherit from previous row if empty
+        const rawName    = get(pName);
+        const rawMainSku = get(pMainSku);
+        const rawTavarId = get(pTavarId);
+
+        const name    = rawName    || lastName;
+        const mainSku = rawMainSku || lastMainSku;
+        const tavarId = rawTavarId || lastTavarId;
+
+        // Variant SKU and barcode are NEVER inherited — they're unique per row
+        const sku     = get(pSku);
+        const barcode = get(pBarcode);
+        // Price parsing: Uzbek format uses comma as thousands separator
+        // "6,300" = 6300, "10,500" = 10500, "1,500,000" = 1500000
+        const priceRaw = get(pPrice);
+        let price = 0;
+        if (priceRaw) {
+          // Remove spaces, then check format
+          const cleaned = priceRaw.replace(/\s/g, '');
+          // If comma separates groups of 3 digits (thousands), remove commas
+          // e.g. "6,300" → "6300", "10,500" → "10500"
+          if (/^\d{1,3}(,\d{3})+$/.test(cleaned)) {
+            price = parseFloat(cleaned.replace(/,/g, '')) || 0;
+          } else if (/^\d+,\d{1,2}$/.test(cleaned)) {
+            // "6,3" with 1-2 digits after comma = decimal → multiply by 1000
+            // This handles cases like "6,3" meaning 6300
+            const parts = cleaned.split(',');
+            const decimals = parts[1].length;
+            price = parseFloat(cleaned.replace(',', '.')) * Math.pow(10, decimals) || 0;
+          } else {
+            price = parseFloat(cleaned.replace(/[^0-9.]/g, '')) || 0;
+          }
+        }
+        const izoh    = get(pIzoh);
+        const ombor   = get(pOmbor);
+        const kirim   = parseFloat(get(pKirim)) || 0;
+        const chiqim  = parseFloat(get(pChiqim)) || 0;
+        const sotuv   = parseFloat(get(pSotuv)) || 0;
+        const qoldiq  = parseFloat(get(pQoldiq)) || 0;
+
+        if (rawName)    lastName    = rawName;
+        if (rawMainSku) lastMainSku = rawMainSku;
+        if (rawTavarId) lastTavarId = rawTavarId;
+
+        // Valid row must have variant sku OR barcode
+        if (!sku && !barcode) continue;
+        if (!name && !lastName) continue;
+        // Skip if this row looks like a header (contains literal "sku" or "mahsulot" as value)
+        if (sku.toLowerCase() === 'sku' || name.toLowerCase() === 'mahsulot nomi') continue;
+
+        importData.push({ name, mainSku, tavarId, sku, barcode, price, izoh, ombor, kirim, chiqim, sotuv, qoldiq });
+      }
+
+      if (importData.length === 0) { toast('Hech qanday mahsulot topilmadi. Encoding yoki format tekshiring.', 'red'); return; }
+
+      // Group by name + tavarId (same as main table logic)
+      const previewGroups = [];
+      importData.forEach(r => {
+        const key = (r.name||'') + '||' + (r.tavarId||'');
+        const last = previewGroups[previewGroups.length-1];
+        if (last && last.key === key) {
+          last.variants.push(r);
+        } else {
+          previewGroups.push({ key, name: r.name, mainSku: r.mainSku, tavarId: r.tavarId, variants: [r] });
+        }
+      });
+
+      const totalVariants = importData.length;
+      const totalGroups = previewGroups.length;
+      document.getElementById('import-summary').innerHTML =
+        `<span style="color:var(--green-mid)">✓</span> <b>${totalGroups}</b> ta mahsulot, jami <b>${totalVariants}</b> ta variant topildi — tekshirib tasdiqlang
+         <span style="font-size:11px;color:var(--text-3);margin-left:6px">[Nom:${pName} | SKU:${pMainSku} | ID:${pTavarId} | VariantSKU:${pSku} | Barcode:${pBarcode} | Narx:${pPrice}]</span>`;
+
+      // Build grouped preview table
+      let previewHtml = '';
+      previewGroups.forEach((g, gi) => {
+        const first = g.variants[0];
+        previewHtml += `
+          <tr style="background:var(--surface)">
+            <td style="padding:0.6rem 0.75rem">
+              <button class="expand-btn" id="prev-btn-${gi}" onclick="togglePreviewGroup(${gi})" style="width:24px;height:24px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+              </button>
+            </td>
+            <td style="padding:0.6rem 0.5rem">
+              <div style="font-weight:600;font-size:13px">${g.name||'—'}</div>
+              <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+                ${g.mainSku?`<span style="font-family:var(--font-mono);font-size:11px;color:var(--text-2)">${g.mainSku}</span>`:''}
+                ${g.tavarId?`<span style="font-size:11px;color:var(--text-3)">${g.tavarId}</span>`:''}
+                <span class="cat-pill" style="font-size:10px">${g.variants.length} variant</span>
+              </div>
+            </td>
+            <td style="font-family:var(--font-mono);font-size:12px;padding:0.6rem 0.5rem">${first.price?fmtNum(first.price)+' so\'m':'—'}</td>
+            <td style="font-size:12px;color:var(--text-3);padding:0.6rem 0.5rem" colspan="3">${first.izoh||'—'}</td>
+          </tr>`;
+        // Variant sub-rows
+        g.variants.forEach((v, vi) => {
+          previewHtml += `
+            <tr class="prev-var-${gi}" style="display:none;background:var(--surface-2)">
+              <td style="padding:0.4rem 0.5rem 0.4rem 2rem"></td>
+              <td style="padding:0.4rem 0.5rem">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="variant-dot" style="width:5px;height:5px;border-radius:50%;background:var(--text-3);display:inline-block;flex-shrink:0"></span>
+                  <span style="font-family:var(--font-mono);font-size:12px;font-weight:500">${v.sku||'—'}</span>
+                  <span style="font-family:var(--font-mono);font-size:11px;color:var(--text-3)">${v.barcode||''}</span>
+                </div>
+              </td>
+              <td style="font-family:var(--font-mono);font-size:12px;color:var(--text-3);padding:0.4rem 0.5rem">${v.price?fmtNum(v.price)+' so\'m':'—'}</td>
+              <td style="font-size:12px;color:var(--text-3);padding:0.4rem 0.5rem">${v.izoh||'—'}</td>
+              <td style="padding:0.4rem 0.5rem">${v.ombor?`<span class="loc-pill" style="font-size:10px">${v.ombor}</span>`:'—'}</td>
+              <td style="font-family:var(--font-mono);font-size:12px;padding:0.4rem 0.5rem">${v.qoldiq||'—'}</td>
+            </tr>`;
+        });
+      });
+      document.getElementById('import-tbody').innerHTML = previewHtml;
+
+      document.getElementById('import-preview').style.display = 'block';
+    } catch(err) {
+      toast('Fayl o\'qishda xatolik: ' + err.message, 'red');
+    }
+}
+
+function togglePreviewGroup(gi) {
+  const btn = document.getElementById('prev-btn-' + gi);
+  const rows = document.querySelectorAll(`.prev-var-${gi}`);
+  const isOpen = btn.classList.contains('open');
+  btn.classList.toggle('open', !isOpen);
+  rows.forEach(r => r.style.display = isOpen ? 'none' : 'table-row');
+}
+
+function confirmImport() {
+  if (importData.length === 0) return;
+  const defaultLocId = state.locations[0]?.id || 1;
+
+  // Group variants by name + tavarId — each group = one "product family"
+  const groups = [];
+  importData.forEach(r => {
+    const key = (r.name||'') + '||' + (r.tavarId||'');
+    const last = groups[groups.length-1];
+    if (last && last.key === key) {
+      last.variants.push(r);
+    } else {
+      groups.push({ key, variants: [r] });
+    }
+  });
+
+  let addedVariants = 0;
+  let addedGroups = 0;
+
+  groups.forEach(g => {
+    g.variants.forEach(r => {
+      if (!r.sku && !r.barcode) return;
+      let locId = defaultLocId;
+      if (r.ombor) {
+        const found = state.locations.find(l => l.name.toLowerCase().includes(r.ombor.toLowerCase()));
+        if (found) locId = found.id;
+      }
+      state.products.push({
+        id: state.nextId++,
+        name: r.name || r.sku,
+        mainSku: r.mainSku || '',
+        tavarId: r.tavarId || '',
+        url: '',
+        sku: r.sku || '',
+        barcode: r.barcode || '',
+        cat: 'Boshqa',
+        locId,
+        izoh: r.izoh || '',
+        price: r.price || 0,
+        sotuv: r.sotuv || 0,
+        qty: r.qoldiq || 0,
+        max: Math.max((r.qoldiq || 0) * 2, 200),
+        minQty: 10,
+        shelfCode: r.ombor || '',
+        uzunlik: '', kenglik: '', balandlik: '', ogirlik: '', logistika: '',
+      });
+      addedVariants++;
+    });
+    addedGroups++;
+  });
+
+  saveState(); cancelImport(); renderMahsulotlar(); renderDashboard();
+  toast(`${addedGroups} ta mahsulot, ${addedVariants} ta variant import qilindi ✓`);
+}
+
+function cancelImport() {
+  importData = [];
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('csv-file-input').value = '';
+}
+
+function exportCSV() {
+  const rows = [['Mahsulot nomi','asosiy sku','Tavar ID','sku','shtrixkod','Tan narxi (sum)','Izoh','ombor o\'rni','kirim','chiqim','sotuv','qoldiq']];
+  const kirimMap={}, chiqimMap={};
+  state.history.forEach(h=>{
+    if(h.type==='kirim') kirimMap[h.prodId]=(kirimMap[h.prodId]||0)+h.qty;
+    else chiqimMap[h.prodId]=(chiqimMap[h.prodId]||0)+h.qty;
+  });
+  state.products.forEach(p => {
+    rows.push([
+      `"${(p.name||'').replace(/"/g,'""')}"`,
+      p.mainSku||'', p.tavarId||'', p.sku||'', p.barcode||'',
+      p.price||0,
+      `"${(p.izoh||'').replace(/"/g,'""')}"`,
+      getLocation(p.locId)?.name||'',
+      kirimMap[p.id]||0, chiqimMap[p.id]||0, p.sotuv||0, p.qty||0
+    ]);
+  });
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'sfatshop_ombor_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  toast('CSV yuklandi ✓');
+}
+
+// ============================================================
+// SIDEBAR TOGGLE
+// ============================================================
+function toggleSidebar() {
+  const sb = document.getElementById('main-sidebar');
+  const main = document.getElementById('main-content');
+  sb.classList.toggle('collapsed');
+  // save preference
+  try { localStorage.setItem('sfatshop_sidebar_collapsed', sb.classList.contains('collapsed') ? '1' : '0'); } catch(e){}
+}
+function restoreSidebar() {
+  try {
+    const v = localStorage.getItem('sfatshop_sidebar_collapsed');
+    if (v === '1') {
+      document.getElementById('main-sidebar').classList.add('collapsed');
+    }
+  } catch(e){}
+}
+restoreSidebar();
+
+// ============================================================
+// DATE
+// ============================================================
+function updateDate() {
+  const d=new Date();
+  const days=['Yak','Du','Se','Ch','Pa','Ju','Sha'];
+  document.getElementById('cur-date').textContent=`${days[d.getDay()]}, ${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}`;
+}
+updateDate();
+
+// ============================================================
+// MINI APP (Uzum -> Telegram Mini App)
+// ============================================================
+const MA_BACKEND_KEY = 'sfatshop_ma_backend';
+const MA_TOKEN_KEY = 'sfatshop_ma_token';
+
+function maGet(key, def) { try { return localStorage.getItem(key) || def; } catch(e){ return def; } }
+function maBackend() { return (maGet(MA_BACKEND_KEY, 'https://api.sfatshop.uz') || '').replace(/\/+$/,''); }
+function maToken() { return maGet(MA_TOKEN_KEY, ''); }
+function maEsc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function maFmt(n) { if (n==null) return '-'; return Number(n).toLocaleString('ru-RU'); }
+
+function maStatus(msg, type) {
+  const el = document.getElementById('ma-status');
+  if (!el) return;
+  const colors = { ok:'var(--green-mid)', err:'var(--red)', info:'var(--text-2)' };
+  el.style.color = colors[type] || colors.info;
+  el.textContent = msg;
+}
+
+function renderMiniApp() {
+  document.getElementById('ma-backend').value = maGet(MA_BACKEND_KEY, 'https://api.sfatshop.uz');
+  maBadgeUpdate();
+  document.getElementById('ma-token').value = maToken();
+  maStatus('', 'info');
+  maRenderMini();
+}
+
+function maBadgeUpdate() {
+  const badge = document.getElementById('ma-env-badge');
+  if (!badge) return;
+  const val = (document.getElementById('ma-backend').value || '').trim();
+  if (val.includes('localhost') || val.includes('127.0.0.1')) {
+    badge.textContent = 'LOKAL (ehtiyot bol)';
+    badge.style.background = 'var(--red-bg)';
+    badge.style.color = 'var(--red)';
+  } else if (val.includes('api.sfatshop.uz')) {
+    badge.textContent = 'VPS ulangan';
+    badge.style.background = 'var(--green-pale)';
+    badge.style.color = 'var(--green-mid)';
+  } else {
+    badge.textContent = val ? 'Boshqa server' : '';
+    badge.style.background = 'var(--amber-bg)';
+    badge.style.color = 'var(--amber)';
+  }
+}
+
+function maSetBackend(url) {
+  const inp = document.getElementById('ma-backend');
+  if (!inp) return;
+  inp.value = url;
+  try { localStorage.setItem(MA_BACKEND_KEY, url); } catch(e) {}
+  maBadgeUpdate();
+  maStatus('Backend manzili saqlandi: ' + url, 'ok');
+}
+
+function maSaveSettings() {
+  try {
+    localStorage.setItem(MA_BACKEND_KEY, document.getElementById('ma-backend').value.trim());
+    localStorage.setItem(MA_TOKEN_KEY, document.getElementById('ma-token').value.trim());
+    maStatus('Sozlamalar saqlandi.', 'ok');
+  } catch(e) { maStatus('Saqlashda xato.', 'err'); }
+}
+
+async function maApi(path, options) {
+  options = options || {};
+  const headers = options.headers || {};
+  headers['Content-Type'] = 'application/json';
+  if (path.indexOf('/api/admin') === 0) headers['X-Admin-Token'] = maToken();
+  const res = await fetch(maBackend() + path, Object.assign({}, options, { headers }));
+  let data = null;
+  try { data = await res.json(); } catch(e) {}
+  if (!res.ok) { throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status)); }
+  return data;
+}
+
+async function maSync() {
+  maStatus('Uzumdan yangilanmoqda... biroz kuting.', 'info');
+  try {
+    const d = await maApi('/api/admin/sync', { method:'POST', body:'{}' });
+    const lines = (d.results||[]).map(r => 'Dokon '+r.shop_id+': '+(r.status==='ok'? r.count+' ta':'xato')).join('  |  ');
+    maStatus('Yangilandi. '+lines, 'ok');
+  } catch(e) { maStatus('Xato: '+e.message, 'err'); }
+}
+
+async function maLoadUzum() {
+  const tb = document.getElementById('ma-uzum-tbody');
+  tb.innerHTML = '<tr><td colspan="6"><div class="empty-state">Yuklanmoqda...</div></td></tr>';
+  const shop = document.getElementById('ma-shop').value;
+  const q = document.getElementById('ma-search').value.trim();
+  let path = '/api/admin/uzum-products?';
+  if (shop) path += 'shop_id='+encodeURIComponent(shop)+'&';
+  if (q) path += 'q='+encodeURIComponent(q);
+  try {
+    const items = (await maApi(path)).products || [];
+    if (!items.length) { tb.innerHTML = '<tr><td colspan="7"><div class="empty-state">Mahsulot topilmadi</div></td></tr>'; return; }
+    tb.innerHTML = items.map(p => {
+      const img = p.image_url ? '<img src="'+p.image_url+'" style="width:40px;height:40px;object-fit:cover;border-radius:6px">' : '';
+      const status = p.in_mini_app
+        ? '<span style="color:var(--green-mid);font-size:12px;font-weight:600">Qoshilgan</span>'
+        : '<button class="btn btn-primary btn-sm" onclick="maAddProduct('+p.id+','+(p.uzum_price||0)+')">Qosh</button>';
+      const chk = p.in_mini_app ? '<input type="checkbox" disabled title="Allaqachon qoshilgan">' : '<input type="checkbox" class="ma-uzum-chk" data-id="'+p.id+'" data-price="'+(p.uzum_price||0)+'" onchange="maBulkBarUpdate()">';
+      return '<tr><td>'+chk+'</td><td>'+img+'</td><td class="td-name">'+maEsc(p.name)+'</td><td style="font-size:12px;color:var(--text-3)">'+maEsc(p.category||'')+'</td><td style="font-family:var(--font-mono)">'+(p.stock||0)+'</td><td style="font-family:var(--font-mono)">'+maFmt(p.uzum_price)+'</td><td>'+status+'</td></tr>';
+    }).join('');
+    maBulkBarUpdate();
+  } catch(e) { tb.innerHTML = '<tr><td colspan="6"><div class="empty-state" style="color:var(--red)">Xato: '+maEsc(e.message)+'</div></td></tr>'; }
+}
+
+function maCheckAll(checked) {
+  document.querySelectorAll('.ma-uzum-chk').forEach(c => { c.checked = checked; });
+  maBulkBarUpdate();
+}
+
+function maBulkBarUpdate() {
+  const checked = document.querySelectorAll('.ma-uzum-chk:checked');
+  const bar = document.getElementById('ma-bulk-bar');
+  const cnt = document.getElementById('ma-bulk-count');
+  if (!bar) return;
+  if (checked.length > 0) {
+    bar.style.display = 'flex';
+    cnt.textContent = checked.length + ' ta tanlangan';
+  } else {
+    bar.style.display = 'none';
+  }
+  const allChk = document.querySelectorAll('.ma-uzum-chk');
+  const allChkEl = document.getElementById('ma-check-all');
+  if (allChkEl && allChk.length > 0) allChkEl.indeterminate = checked.length > 0 && checked.length < allChk.length;
+  if (allChkEl && allChk.length > 0 && checked.length === allChk.length) { allChkEl.indeterminate = false; allChkEl.checked = true; }
+  if (allChkEl && checked.length === 0) { allChkEl.indeterminate = false; allChkEl.checked = false; }
+}
+
+async function maBulkAdd() {
+  const checked = Array.from(document.querySelectorAll('.ma-uzum-chk:checked'));
+  if (!checked.length) return;
+  const priceInput = document.getElementById('ma-bulk-price').value.trim();
+  const isPct = document.getElementById('ma-bulk-pct').checked;
+  if (!priceInput) { maStatus('Narx kiriting!', 'err'); return; }
+  const pctOrPrice = Number(priceInput);
+  let added = 0, skipped = 0, errors = 0;
+  maStatus('Yuklanmoqda...', 'info');
+  for (const chk of checked) {
+    const uzumId = Number(chk.dataset.id);
+    const uzumPrice = Number(chk.dataset.price);
+    const finalPrice = isPct ? Math.round(uzumPrice * (1 + pctOrPrice / 100)) : pctOrPrice;
+    try {
+      await maApi('/api/admin/products', { method:'POST', body: JSON.stringify({ uzum_product_id: uzumId, price: finalPrice, video_url: null }) });
+      added++;
+    } catch(e) {
+      if (e.message && e.message.includes('409')) skipped++;
+      else errors++;
+    }
+  }
+  maStatus(added + ' ta qoshildi' + (skipped ? ', ' + skipped + ' ta allaqachon bor' : '') + (errors ? ', ' + errors + ' ta xato' : '') + '.', added > 0 ? 'ok' : 'err');
+  maLoadUzum(); maRenderMini();
+}
+
+async function maAddProduct(uzumId, uzumPrice) {
+  const price = prompt('Mini App uchun narx (sum):', uzumPrice || '');
+  if (price === null) return;
+  const video = prompt('Video havola (ixtiyoriy):', '');
+  try {
+    await maApi('/api/admin/products', { method:'POST', body: JSON.stringify({ uzum_product_id: uzumId, price: Number(price), video_url: video || null }) });
+    maStatus('Mahsulot qoshildi.', 'ok');
+    maLoadUzum(); maRenderMini();
+  } catch(e) { maStatus('Xato: '+e.message, 'err'); }
+}
+
+async function maRenderMini() {
+  const tb = document.getElementById('ma-mini-tbody');
+  try {
+    const items = (await maApi('/api/admin/mini-products')).products || [];
+    if (!items.length) { tb.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="icon">bag</div>Hali mahsulot qoshilmagan</div></td></tr>'; return; }
+    tb.innerHTML = items.map(p =>
+      '<tr><td class="td-name">'+maEsc(p.name)+'</td>'
+      +'<td><input type="number" value="'+(p.price||0)+'" style="width:120px;padding:5px;border:1px solid var(--border);border-radius:6px" onchange="maUpdate('+p.mini_id+',{price:Number(this.value)})"></td>'
+      +'<td><input type="text" value="'+maEsc(p.video_url||'')+'" placeholder="havola" style="width:190px;padding:5px;border:1px solid var(--border);border-radius:6px" onchange="maUpdate('+p.mini_id+',{video_url:this.value})"></td>'
+      +'<td><input type="checkbox" '+(p.is_active?'checked':'')+' onchange="maUpdate('+p.mini_id+',{is_active:this.checked?1:0})"></td>'
+      +'<td><button class="btn-icon" style="color:var(--red)" title="Ochirish" onclick="maDelete('+p.mini_id+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button></td></tr>'
+    ).join('');
+  } catch(e) { tb.innerHTML = '<tr><td colspan="5"><div class="empty-state" style="color:var(--red)">Xato: '+maEsc(e.message)+'</div></td></tr>'; }
+}
+
+async function maUpdate(miniId, fields) {
+  try { await maApi('/api/admin/products/'+miniId, { method:'PATCH', body: JSON.stringify(fields) }); maStatus('Ozgartirildi.', 'ok'); }
+  catch(e) { maStatus('Xato: '+e.message, 'err'); }
+}
+
+async function maDelete(miniId) {
+  if (!confirm('Bu mahsulot Mini App dan ochirilsinmi?')) return;
+  try { await maApi('/api/admin/products/'+miniId, { method:'DELETE' }); maStatus('Ochirildi.', 'ok'); maRenderMini(); maLoadUzum(); }
+  catch(e) { maStatus('Xato: '+e.message, 'err'); }
+}
+</script>
+</body>
+</html>
