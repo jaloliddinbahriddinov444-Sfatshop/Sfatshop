@@ -658,8 +658,9 @@ tbody td { padding: 0.75rem 1rem; vertical-align: middle; }
                 </div>
               </div>
               <div style="flex:1;min-width:200px">
-                <label style="display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px">Admin token</label>
-                <input type="password" id="ma-token" class="filter-select" style="width:100%" placeholder="parol">
+                <label style="display:block;font-size:12px;font-weight:500;color:var(--text-2);margin-bottom:5px">Admin token <span style="font-weight:400;color:var(--text-3)">(ixtiyoriy)</span></label>
+                <input type="password" id="ma-token" class="filter-select" style="width:100%" placeholder="bo'sh qoldiring — login ishlatiladi" autocomplete="off">
+                <div style="font-size:11px;color:var(--text-3);margin-top:4px">Login sessiyangiz ishlatiladi — bu maydon shart emas.</div>
               </div>
               <button class="btn btn-primary" onclick="maSaveSettings()">Saqlash</button>
               <button class="btn btn-outline" onclick="maSync()">Uzumdan yangilash</button>
@@ -2443,8 +2444,15 @@ async function maApi(path, options) {
   options = options || {};
   const headers = options.headers || {};
   headers['Content-Type'] = 'application/json';
-  if (path.indexOf('/api/admin') === 0) headers['X-Admin-Token'] = maToken();
+  if (path.indexOf('/api/admin') === 0) {
+    // Avval login sessiyasi (admin), bo'lmasa qo'lda kiritilgan master token (zaxira)
+    const st = sessTokenVal();
+    if (st) headers['X-Session-Token'] = st;
+    else { const mt = maToken(); if (mt) headers['X-Admin-Token'] = mt; }
+  }
   const res = await fetch(maBackend() + path, Object.assign({}, options, { headers }));
+  if (res.status === 401) { sessionExpired(); throw new Error('Sessiya tugadi, qaytadan kiring'); }
+  if (res.status === 403) { throw new Error('Bu amal uchun admin huquqi kerak'); }
   let data = null;
   try { data = await res.json(); } catch(e) {}
   if (!res.ok) { throw new Error((data && data.error) ? data.error : ('HTTP ' + res.status)); }
