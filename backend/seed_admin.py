@@ -6,11 +6,16 @@ Ishlatish (parol ekranga chiqmaydi, git'ga tushmaydi):
 
 Agar login allaqachon mavjud bo'lsa — paroli yangilanadi (qayta ishga tushirsa bo'ladi).
 """
+import getpass
 import os
 import sys
 
+from dotenv import load_dotenv
+
 import auth
 import database
+
+load_dotenv()  # DB_PATH va boshqalar .env'dan olinsin
 
 
 def main() -> int:
@@ -18,7 +23,14 @@ def main() -> int:
     name = (os.getenv("ADMIN_NAME") or "Admin").strip()
     password = os.getenv("ADMIN_PASSWORD") or ""
     if not password:
-        print("XATO: ADMIN_PASSWORD env o'rnatilmagan.", file=sys.stderr)
+        # Interaktiv: parol ekranda ko'rinmaydi
+        password = getpass.getpass("Yangi admin paroli: ")
+        confirm = getpass.getpass("Parolni qayta kiriting: ")
+        if password != confirm:
+            print("XATO: parollar mos kelmadi.", file=sys.stderr)
+            return 1
+    if len(password) < 6:
+        print("XATO: parol kamida 6 belgi bo'lsin.", file=sys.stderr)
         return 1
     database.init_db()
     existing = auth.get_user_by_login(login)
